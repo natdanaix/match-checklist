@@ -104,10 +104,23 @@
             padding: 5px 10px;
             border-radius: 4px;
             transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .display-field::after {
+            content: ' ✏️';
+            font-size: 0.8em;
+            opacity: 0.5;
+            margin-left: 4px;
+            transition: opacity 0.2s ease;
         }
 
         .display-field:hover {
             background: #e9ecef;
+        }
+
+        .display-field:hover::after {
+            opacity: 1;
         }
 
         .checklist {
@@ -115,20 +128,20 @@
         }
 
         .progress-section {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .progress-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9em;
+            margin-bottom: 4px;
+            font-size: 0.8em;
             color: #666;
         }
 
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: #e9ecef;
             border-radius: 10px;
             overflow: hidden;
@@ -536,16 +549,16 @@
             }
 
             .progress-section {
-                margin-bottom: 18px;
+                margin-bottom: 9px;
             }
 
             .progress-label {
-                font-size: 0.9em;
-                margin-bottom: 8px;
+                font-size: 0.8em;
+                margin-bottom: 4px;
             }
 
             .progress-bar {
-                height: 10px;
+                height: 6px;
             }
 
             .edit-item-content {
@@ -674,15 +687,15 @@
             }
 
             .progress-section {
-                margin-bottom: 15px;
+                margin-bottom: 7px;
             }
 
             .progress-label {
-                font-size: 0.85em;
+                font-size: 0.8em;
             }
 
             .progress-bar {
-                height: 8px;
+                height: 6px;
             }
 
             .actions {
@@ -719,7 +732,7 @@
             <h1>Thai League</h1>
             <div class="match-info">
                 <div class="editable-field">
-                    <span class="display-field" id="teamDisplay" onclick="editTeams()">จันทบุรี vs ศรีสะเกษ</span>
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">⚽ จันทบุรี vs ศรีสะเกษ</span>
                     <input type="text" id="teamInput" style="display: none;" placeholder="เช่น จันทบุรี vs ศรีสะเกษ">
                     <button id="teamBtn" style="display: none;" onclick="saveTeams()">Save</button>
                 </div>
@@ -934,7 +947,8 @@
             const input = document.getElementById('teamInput');
             const btn = document.getElementById('teamBtn');
             
-            input.value = display.textContent;
+            // เอาเฉพาะข้อความ ไม่เอา icon
+            input.value = display.textContent.replace('⚽ ', '');
             display.style.display = 'none';
             input.style.display = 'inline-block';
             btn.style.display = 'inline-block';
@@ -947,7 +961,7 @@
             const btn = document.getElementById('teamBtn');
             
             const newValue = input.value.trim() || 'จันทบุรี vs ศรีสะเกษ';
-            display.textContent = newValue;
+            display.textContent = '⚽ ' + newValue;
             display.style.display = 'inline-block';
             input.style.display = 'none';
             btn.style.display = 'none';
