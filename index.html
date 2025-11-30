@@ -235,6 +235,149 @@
             display: block;
         }
 
+        .item-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .item-btn {
+            padding: 4px 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s ease;
+            opacity: 0;
+        }
+
+        .checklist-item:hover .item-btn {
+            opacity: 1;
+        }
+
+        .item-btn:hover {
+            background: #5568d3;
+        }
+
+        .item-btn.delete {
+            background: #dc3545;
+        }
+
+        .item-btn.delete:hover {
+            background: #c82333;
+        }
+
+        .add-item-section {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .add-item-section input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .add-item-section button {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-item-section button:hover {
+            background: #218838;
+        }
+
+        .edit-item-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .edit-item-modal.show {
+            display: flex;
+        }
+
+        .edit-item-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .edit-item-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .edit-item-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .edit-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-item-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .edit-item-actions .save {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-item-actions .save:hover {
+            background: #5568d3;
+        }
+
+        .edit-item-actions .cancel {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .edit-item-actions .cancel:hover {
+            background: #dee2e6;
+        }
+
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
@@ -302,59 +445,13 @@
 
             <div class="section-title">📋 รายการเช็คงานก่อนแข่ง</div>
             
-            <div class="checklist-item">
-                <input type="checkbox" id="item1">
-                <label for="item1">นัดเพลนกล้อง</label>
+            <div id="checklistContainer">
+                <!-- Items will be dynamically generated here -->
             </div>
 
-            <div class="checklist-item">
-                <input type="checkbox" id="item2">
-                <label for="item2">เพลนกล้อง</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item3">
-                <label for="item3">ตีเส้น</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item4">
-                <label for="item4">ทุ่มบอล , sync ball</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item5">
-                <label for="item5">เช็ค pgm จาก ob 3จอ</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item6">
-                <label for="item6">เทส Vokero</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item7">
-                <label for="item7">Export test sound</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item8">
-                <label for="item8">เช็คจอ RRA ข้างสนาม</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item9">
-                <label for="item9">ผู้ตัดสินตรวจสนาม</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item10">
-                <label for="item10">เตรียมวิดีโอให้ผู้ตัดสิน</label>
-            </div>
-
-            <div class="checklist-item">
-                <input type="checkbox" id="item11">
-                <label for="item11">พร้อมแข่ง</label>
+            <div class="add-item-section">
+                <input type="text" id="newItemInput" placeholder="เพิ่มรายการใหม่...">
+                <button onclick="addNewItem()">➕ เพิ่ม</button>
             </div>
         </div>
 
@@ -368,26 +465,94 @@
         ✓ คัดลอกแล้ว!
     </div>
 
+    <div class="edit-item-modal" id="editModal">
+        <div class="edit-item-content">
+            <h2>แก้ไขรายการ</h2>
+            <input type="text" id="editItemInput" placeholder="แก้ไขข้อความ">
+            <div class="edit-item-actions">
+                <button class="save" onclick="saveEditItem()">💾 บันทึก</button>
+                <button class="cancel" onclick="closeEditModal()">❌ ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Default items
+        const defaultItems = [
+            'นัดเพลนกล้อง',
+            'เพลนกล้อง',
+            'ตีเส้น',
+            'ทุ่มบอล , sync ball',
+            'เช็ค pgm จาก ob 3จอ',
+            'เทส Vokero',
+            'Export test sound',
+            'เช็คจอ RRA ข้างสนาม',
+            'ผู้ตัดสินตรวจสนาม',
+            'เตรียมวิดีโอให้ผู้ตัดสิน',
+            'พร้อมแข่ง'
+        ];
+
+        let currentEditIndex = null;
+
         // Load saved data on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadChecklistState();
             loadEditableFields();
+            renderChecklist();
         });
 
-        // Save state whenever a checkbox changes
-        document.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
-                saveChecklistState();
-                updateProgress();
+        // Render checklist items
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+            
+            const items = getChecklistItems();
+            items.forEach((item, index) => {
+                const checked = getItemCheckedState(index);
+                const itemElement = document.createElement('div');
+                itemElement.className = 'checklist-item';
+                itemElement.innerHTML = `
+                    <input type="checkbox" id="item${index}" ${checked ? 'checked' : ''} onchange="saveChecklistState(); updateProgress();">
+                    <label for="item${index}">${item}</label>
+                    <div class="item-actions">
+                        <button class="item-btn" onclick="openEditModal(${index})">✏️ แก้ไข</button>
+                        <button class="item-btn delete" onclick="deleteItem(${index})">🗑️ ลบ</button>
+                    </div>
+                `;
+                container.appendChild(itemElement);
+            });
+            updateProgress();
+        }
+
+        function getChecklistItems() {
+            const saved = localStorage.getItem('checklistItems');
+            if (saved) {
+                return JSON.parse(saved);
             }
-        });
+            return defaultItems;
+        }
+
+        function saveChecklistItems(items) {
+            localStorage.setItem('checklistItems', JSON.stringify(items));
+        }
+
+        function getItemCheckedState(index) {
+            const saved = localStorage.getItem('checklistState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                return state[`item${index}`] || false;
+            }
+            return false;
+        }
 
         function saveChecklistState() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const items = getChecklistItems();
             const state = {};
-            checkboxes.forEach((checkbox, index) => {
-                state[`item${index + 1}`] = checkbox.checked;
+            items.forEach((item, index) => {
+                const checkbox = document.getElementById(`item${index}`);
+                if (checkbox) {
+                    state[`item${index}`] = checkbox.checked;
+                }
             });
             localStorage.setItem('checklistState', JSON.stringify(state));
         }
@@ -430,13 +595,11 @@
             const date = document.getElementById('dateDisplay').textContent;
             const time = document.getElementById('timeDisplay').textContent;
 
-            // Calculate progress percentage
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
             const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
             const totalCount = checkboxes.length;
             const percentage = totalCount === 0 ? 0 : Math.round((checkedCount / totalCount) * 100);
 
-            // Create visual progress bar (20 characters wide)
             const filledLength = Math.round((percentage / 100) * 20);
             const emptyLength = 20 - filledLength;
             const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
@@ -452,23 +615,10 @@
                 ''
             ];
 
-            const items = [
-                'นัดเพลนกล้อง',
-                'เพลนกล้อง',
-                'ตีเส้น',
-                'ทุ่มบอล , sync ball',
-                'เช็ค pgm จาก ob 3จอ',
-                'เทส Vokero',
-                'Export test sound',
-                'เช็คจอ RRA ข้างสนาม',
-                'ผู้ตัดสินตรวจสนาม',
-                'เตรียมวิดีโอให้ผู้ตัดสิน',
-                'พร้อมแข่ง'
-            ];
-
+            const items = getChecklistItems();
             items.forEach((item, index) => {
-                const checkbox = document.getElementById(`item${index + 1}`);
-                const status = checkbox.checked ? '✅' : '⬜';
+                const checkbox = document.getElementById(`item${index}`);
+                const status = checkbox && checkbox.checked ? '✅' : '⬜';
                 lines.push(`${status} ${item}`);
             });
 
@@ -505,7 +655,6 @@
             const input = document.getElementById('dateInput');
             const btn = document.getElementById('dateBtn');
             
-            // Parse the date from display text
             const dateText = display.textContent.replace('📅 ', '');
             const date = new Date(dateText);
             const dateString = date.toISOString().split('T')[0];
@@ -539,7 +688,6 @@
             const input = document.getElementById('timeInput');
             const btn = document.getElementById('timeBtn');
             
-            // Parse the time from display text
             const timeText = display.textContent.replace('⏰ Kickoff ', '');
             input.value = timeText;
             
@@ -598,12 +746,93 @@
             updateProgress();
         }
 
+        // Edit item functions
+        function openEditModal(index) {
+            currentEditIndex = index;
+            const items = getChecklistItems();
+            const input = document.getElementById('editItemInput');
+            input.value = items[index];
+            input.focus();
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEditIndex = null;
+        }
+
+        function saveEditItem() {
+            if (currentEditIndex === null) return;
+            
+            const newValue = document.getElementById('editItemInput').value.trim();
+            if (!newValue) {
+                alert('กรุณาป้อนข้อความ');
+                return;
+            }
+            
+            const items = getChecklistItems();
+            items[currentEditIndex] = newValue;
+            saveChecklistItems(items);
+            renderChecklist();
+            closeEditModal();
+        }
+
+        function deleteItem(index) {
+            if (confirm('คุณแน่ใจหรือว่าต้องการลบรายการนี้?')) {
+                const items = getChecklistItems();
+                items.splice(index, 1);
+                saveChecklistItems(items);
+                
+                // Update checked state - remove the deleted item and shift others
+                const saved = localStorage.getItem('checklistState');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    const newState = {};
+                    let newIndex = 0;
+                    for (let i = 0; i < Object.keys(state).length; i++) {
+                        if (i !== index) {
+                            newState[`item${newIndex}`] = state[`item${i}`];
+                            newIndex++;
+                        }
+                    }
+                    localStorage.setItem('checklistState', JSON.stringify(newState));
+                }
+                
+                renderChecklist();
+            }
+        }
+
+        function addNewItem() {
+            const input = document.getElementById('newItemInput');
+            const newValue = input.value.trim();
+            
+            if (!newValue) {
+                alert('กรุณาป้อนข้อความ');
+                return;
+            }
+            
+            const items = getChecklistItems();
+            items.push(newValue);
+            saveChecklistItems(items);
+            input.value = '';
+            renderChecklist();
+        }
+
         // Allow Enter key to save editable fields
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 if (e.target.id === 'teamInput') saveTeams();
                 if (e.target.id === 'dateInput') saveDate();
                 if (e.target.id === 'timeInput') saveTime();
+                if (e.target.id === 'editItemInput') saveEditItem();
+                if (e.target.id === 'newItemInput') addNewItem();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') {
+                closeEditModal();
             }
         });
     </script>
