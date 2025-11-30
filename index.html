@@ -917,8 +917,8 @@
             const totalCount = checkboxes.length;
             const percentage = totalCount === 0 ? 0 : Math.round((checkedCount / totalCount) * 100);
 
-            const filledLength = Math.round((percentage / 100) * 20);
-            const emptyLength = 20 - filledLength;
+            const filledLength = Math.round((percentage / 100) * 10);
+            const emptyLength = 10 - filledLength;
             const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
 
             const lines = [
