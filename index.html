@@ -2,17 +2,20 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            /* ป้องกันการเลือก Text โดยไม่ตั้งใจตอนลาก */
             -webkit-touch-callout: none;
+            user-select: none; 
         }
 
         input, button, textarea {
@@ -28,6 +31,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overscroll-behavior-y: none; /* ป้องกัน Pull-to-refresh รบกวนการลาก */
         }
 
         .container {
@@ -95,10 +99,6 @@
             transition: all 0.3s ease;
         }
 
-        .editable-field button:hover {
-            background: #5568d3;
-        }
-
         .display-field {
             cursor: pointer;
             padding: 5px 10px;
@@ -112,15 +112,10 @@
             font-size: 0.8em;
             opacity: 0.5;
             margin-left: 4px;
-            transition: opacity 0.2s ease;
         }
 
         .display-field:hover {
             background: #e9ecef;
-        }
-
-        .display-field:hover::after {
-            opacity: 1;
         }
 
         .checklist {
@@ -145,7 +140,6 @@
             background: #e9ecef;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .progress-fill {
@@ -163,6 +157,7 @@
             font-size: 1.1em;
         }
 
+        /* Styling สำหรับการลาก */
         .checklist-item {
             display: flex;
             align-items: center;
@@ -170,18 +165,35 @@
             margin-bottom: 10px;
             background: #f8f9fa;
             border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            touch-action: manipulation;
-            gap: 10px;
+            cursor: grab; /* เปลี่ยน cursor */
+            transition: background-color 0.2s, transform 0.2s;
+            touch-action: pan-y; /* ให้ scroll แนวตั้งได้ แต่ touch event อื่นๆ จะถูกจัดการโดย JS */
+            position: relative;
         }
 
         .checklist-item:active {
-            background: #e0e3ff;
+            cursor: grabbing;
         }
 
-        .checklist-item:hover {
-            background: #e9ecef;
+        /* Class ที่ SortableJS จะใส่ให้ตอนกำลังลาก */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #e0e3ff;
+            border: 2px dashed #667eea;
+        }
+        
+        .sortable-drag {
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 1;
+        }
+
+        .drag-handle {
+            color: #ccc;
+            margin-right: 8px;
+            cursor: grab;
+            font-size: 1.2em;
+            line-height: 1;
         }
 
         .checklist-item input[type="checkbox"] {
@@ -190,6 +202,7 @@
             cursor: pointer;
             accent-color: #667eea;
             flex-shrink: 0;
+            margin-right: 10px;
         }
 
         .checklist-item label {
@@ -226,13 +239,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-        button:active {
-            transform: scale(0.98);
         }
 
         .btn-copy {
@@ -243,17 +249,11 @@
         .btn-copy:hover {
             background: #5568d3;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .btn-reset {
             background: #e9ecef;
             color: #333;
-        }
-
-        .btn-reset:hover {
-            background: #dee2e6;
-            transform: translateY(-2px);
         }
 
         .copy-feedback {
@@ -282,18 +282,14 @@
         }
 
         .item-btn {
-            padding: 2px 6px;
+            padding: 4px 8px;
             background: transparent;
             color: #667eea;
             border: 1px solid #ccc;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.65em;
-            transition: all 0.2s ease;
+            font-size: 0.75em;
             opacity: 0.7;
-            white-space: nowrap;
-            min-width: auto;
-            flex: 0 1 auto;
         }
 
         .item-btn:hover {
@@ -304,10 +300,6 @@
         .item-btn.delete {
             color: #dc3545;
             border-color: #dc3545;
-        }
-
-        .item-btn.delete:hover {
-            background: #fff5f5;
         }
 
         .add-item-section {
@@ -325,6 +317,7 @@
             border: 2px solid #667eea;
             border-radius: 6px;
             font-size: 0.95em;
+            user-select: text; /* Allow text selection in input */
         }
 
         .add-item-section button {
@@ -333,14 +326,6 @@
             color: white;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .add-item-section button:hover {
-            background: #218838;
         }
 
         .edit-item-modal {
@@ -369,20 +354,13 @@
             width: 90%;
         }
 
-        .edit-item-content h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-
         .edit-item-content input {
             width: 100%;
             padding: 12px;
             border: 2px solid #667eea;
             border-radius: 6px;
-            font-size: 0.95em;
             margin-bottom: 20px;
-            box-sizing: border-box;
+            user-select: text;
         }
 
         .edit-item-actions {
@@ -393,335 +371,22 @@
         .edit-item-actions button {
             flex: 1;
             padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 600;
-            transition: all 0.3s ease;
         }
 
-        .edit-item-actions .save {
-            background: #667eea;
-            color: white;
-        }
-
-        .edit-item-actions .save:hover {
-            background: #5568d3;
-        }
-
-        .edit-item-actions .cancel {
-            background: #e9ecef;
-            color: #333;
-        }
-
-        .edit-item-actions .cancel:hover {
-            background: #dee2e6;
-        }
+        .edit-item-actions .save { background: #667eea; color: white; }
+        .edit-item-actions .cancel { background: #e9ecef; color: #333; }
 
         @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 15px;
-                border-radius: 8px;
-            }
-
-            .header {
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-            }
-
-            .trophy {
-                font-size: 2em;
-                margin-bottom: 8px;
-            }
-
-            h1 {
-                font-size: 1.5em;
-                margin-bottom: 8px;
-            }
-
-            .match-info {
-                font-size: 0.9em;
-            }
-
-            .match-info div {
-                margin: 6px 0;
-            }
-
-            .display-field {
-                padding: 8px 12px;
-                font-size: 0.9em;
-            }
-
-            .editable-field input {
-                padding: 10px 12px;
-                font-size: 0.95em;
-                max-width: 100%;
-                min-width: 200px;
-            }
-
-            .editable-field button {
-                padding: 8px 14px;
-                font-size: 0.8em;
-                min-width: 60px;
-            }
-
-            .section-title {
-                font-size: 1em;
-                margin: 15px 0 12px 0;
-            }
-
-            .checklist-item {
-                padding: 14px;
-                margin-bottom: 8px;
-                border-radius: 8px;
-            }
-
-            .checklist-item input[type="checkbox"] {
-                width: 22px;
-                height: 22px;
-                margin-right: 12px;
-                min-flex-basis: 22px;
-            }
-
-            .checklist-item label {
-                font-size: 0.95em;
-                line-height: 1.4;
-                word-break: break-word;
-            }
-
-            .item-actions {
-                gap: 6px;
-                margin-left: 8px;
-                flex-shrink: 0;
-            }
-
-            .item-btn {
-                padding: 6px 10px;
-                font-size: 0.75em;
-                opacity: 1;
-            }
-
-            .add-item-section {
-                flex-direction: column;
-                gap: 10px;
-                margin-top: 12px;
-                padding: 10px;
-            }
-
-            .add-item-section input {
-                padding: 12px;
-                font-size: 1em;
-            }
-
-            .add-item-section button {
-                padding: 12px;
-                font-size: 0.95em;
-                width: 100%;
-            }
-
-            .actions {
-                flex-direction: column;
-                gap: 8px;
-                margin-top: 20px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px 16px;
-                font-size: 0.95em;
-                border-radius: 8px;
-            }
-
-            .progress-section {
-                margin-bottom: 9px;
-            }
-
-            .progress-label {
-                font-size: 0.8em;
-                margin-bottom: 4px;
-            }
-
-            .progress-bar {
-                height: 6px;
-            }
-
-            .edit-item-content {
-                width: 95%;
-                padding: 20px;
-            }
-
-            .edit-item-content h2 {
-                font-size: 1.1em;
-                margin-bottom: 15px;
-            }
-
-            .edit-item-content input {
-                padding: 12px;
-                font-size: 1em;
-                margin-bottom: 15px;
-            }
-
-            .copy-feedback {
-                top: 10px;
-                right: 10px;
-                padding: 12px 16px;
-                font-size: 0.95em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 8px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            }
-
-            .container {
-                padding: 12px;
-                max-width: 100%;
-            }
-
-            .header {
-                margin-bottom: 16px;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #667eea;
-            }
-
-            .trophy {
-                font-size: 1.8em;
-                margin-bottom: 6px;
-            }
-
-            h1 {
-                font-size: 1.3em;
-            }
-
-            .match-info {
-                font-size: 0.85em;
-            }
-
-            .match-info div {
-                margin: 5px 0;
-            }
-
-            .display-field {
-                padding: 6px 10px;
-                font-size: 0.85em;
-            }
-
-            .editable-field {
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .editable-field input {
-                padding: 8px 10px;
-                font-size: 0.9em;
-                min-width: 150px;
-            }
-
-            .editable-field button {
-                padding: 6px 12px;
-                font-size: 0.75em;
-            }
-
-            .section-title {
-                font-size: 0.95em;
-                margin: 12px 0 10px 0;
-            }
-
-            .checklist-item {
-                padding: 12px;
-                margin-bottom: 6px;
-            }
-
-            .checklist-item input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-                margin-right: 10px;
-            }
-
-            .checklist-item label {
-                font-size: 0.9em;
-            }
-
-            .item-actions {
-                gap: 4px;
-                margin-left: 6px;
-            }
-
-            .item-btn {
-                padding: 5px 8px;
-                font-size: 0.7em;
-            }
-
-            .add-item-section {
-                padding: 8px;
-                gap: 8px;
-                margin-top: 10px;
-            }
-
-            .add-item-section input {
-                padding: 10px;
-                font-size: 0.95em;
-            }
-
-            .add-item-section button {
-                padding: 10px 12px;
-                font-size: 0.9em;
-            }
-
-            .progress-section {
-                margin-bottom: 7px;
-            }
-
-            .progress-label {
-                font-size: 0.8em;
-            }
-
-            .progress-bar {
-                height: 6px;
-            }
-
-            .actions {
-                gap: 6px;
-                margin-top: 16px;
-            }
-
-            button {
-                padding: 12px 14px;
-                font-size: 0.9em;
-            }
-
-            .edit-item-content {
-                width: 90%;
-                padding: 16px;
-            }
-
-            .edit-item-content h2 {
-                font-size: 1em;
-                margin-bottom: 12px;
-            }
-
-            .edit-item-content input {
-                padding: 10px;
-                font-size: 0.95em;
-            }
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .checklist-item { padding: 14px; }
+            .checklist-item input[type="checkbox"] { width: 24px; height: 24px; }
+            .drag-handle { font-size: 1.4em; padding: 0 5px; }
         }
     </style>
 </head>
@@ -760,11 +425,10 @@
                 </div>
             </div>
 
-            <div class="section-title">📋 รายการเช็คงานก่อนแข่ง</div>
+            <div class="section-title">📋 รายการเช็คงานก่อนแข่ง (กดค้างเพื่อลาก)</div>
             
             <div id="checklistContainer">
-                <!-- Items will be dynamically generated here -->
-            </div>
+                </div>
 
             <div class="add-item-section">
                 <input type="text" id="newItemInput" placeholder="เพิ่มรายการใหม่...">
@@ -810,13 +474,58 @@
         ];
 
         let currentEditIndex = null;
+        let sortableInstance = null;
 
         // Load saved data on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadChecklistState();
             loadEditableFields();
             renderChecklist();
+            initSortable(); // Initialize Drag and Drop
         });
+
+        // Initialize SortableJS
+        function initSortable() {
+            const el = document.getElementById('checklistContainer');
+            sortableInstance = new Sortable(el, {
+                animation: 200, // ความเร็ว Animation (ms)
+                delay: 200, // กดค้าง 200ms เพื่อเริ่มลาก (สำหรับมือถือ)
+                delayOnTouchOnly: true, // ใช้ delay เฉพาะบนจอสัมผัส Desktop ลากได้เลย
+                ghostClass: 'sortable-ghost', // Class ขณะกำลังลาก
+                dragClass: 'sortable-drag',
+                handle: '.checklist-item', // ลากได้ทั้งแถว
+                onEnd: function (evt) {
+                    // เมื่อวางเสร็จ ให้บันทึกลำดับใหม่
+                    updateOrderAfterDrag();
+                }
+            });
+        }
+
+        // ฟังก์ชันอัปเดตข้อมูลหลังจากลากเสร็จ
+        function updateOrderAfterDrag() {
+            const container = document.getElementById('checklistContainer');
+            const itemElements = container.querySelectorAll('.checklist-item');
+            
+            const newItems = [];
+            const newState = {};
+
+            itemElements.forEach((el, index) => {
+                // ดึงข้อความจาก label
+                const text = el.querySelector('label').innerText;
+                // ดึงสถานะ Checked
+                const isChecked = el.querySelector('input[type="checkbox"]').checked;
+                
+                newItems.push(text);
+                newState[`item${index}`] = isChecked;
+            });
+
+            // บันทึกลง Storage
+            saveChecklistItems(newItems);
+            localStorage.setItem('checklistState', JSON.stringify(newState));
+            
+            // Render ใหม่เพื่อให้ ID และปุ่ม Delete ทำงานกับ Index ใหม่ได้ถูกต้อง
+            renderChecklist();
+        }
 
         // Render checklist items
         function renderChecklist() {
@@ -828,12 +537,14 @@
                 const checked = getItemCheckedState(index);
                 const itemElement = document.createElement('div');
                 itemElement.className = 'checklist-item';
+                // เพิ่ม icon drag handle
                 itemElement.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
                     <input type="checkbox" id="item${index}" ${checked ? 'checked' : ''} onchange="saveChecklistState(); updateProgress();">
                     <label for="item${index}">${item}</label>
                     <div class="item-actions">
-                        <button class="item-btn" onclick="openEditModal(${index})">✏️ แก้ไข</button>
-                        <button class="item-btn delete" onclick="deleteItem(${index})">🗑️ ลบ</button>
+                        <button class="item-btn" onclick="openEditModal(${index})">✏️</button>
+                        <button class="item-btn delete" onclick="deleteItem(${index})">🗑️</button>
                     </div>
                 `;
                 container.appendChild(itemElement);
@@ -946,8 +657,6 @@
             const display = document.getElementById('teamDisplay');
             const input = document.getElementById('teamInput');
             const btn = document.getElementById('teamBtn');
-            
-            // เอาเฉพาะข้อความ ไม่เอา icon
             input.value = display.textContent.replace('⚽ ', '');
             display.style.display = 'none';
             input.style.display = 'inline-block';
@@ -959,7 +668,6 @@
             const display = document.getElementById('teamDisplay');
             const input = document.getElementById('teamInput');
             const btn = document.getElementById('teamBtn');
-            
             const newValue = input.value.trim() || 'จันทบุรี vs ศรีสะเกษ';
             display.textContent = '⚽ ' + newValue;
             display.style.display = 'inline-block';
@@ -972,12 +680,13 @@
             const display = document.getElementById('dateDisplay');
             const input = document.getElementById('dateInput');
             const btn = document.getElementById('dateBtn');
-            
             const dateText = display.textContent.replace('📅 ', '');
             const date = new Date(dateText);
-            const dateString = date.toISOString().split('T')[0];
-            
-            input.value = dateString;
+            // Handle invalid date format gracefully
+            if(!isNaN(date.getTime())) {
+               const dateString = date.toISOString().split('T')[0];
+               input.value = dateString;
+            }
             display.style.display = 'none';
             input.style.display = 'inline-block';
             btn.style.display = 'inline-block';
@@ -988,7 +697,6 @@
             const display = document.getElementById('dateDisplay');
             const input = document.getElementById('dateInput');
             const btn = document.getElementById('dateBtn');
-            
             if (input.value) {
                 const date = new Date(input.value);
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -1005,10 +713,8 @@
             const display = document.getElementById('timeDisplay');
             const input = document.getElementById('timeInput');
             const btn = document.getElementById('timeBtn');
-            
             const timeText = display.textContent.replace('⏰ Kickoff ', '');
             input.value = timeText;
-            
             display.style.display = 'none';
             input.style.display = 'inline-block';
             btn.style.display = 'inline-block';
@@ -1019,7 +725,6 @@
             const display = document.getElementById('timeDisplay');
             const input = document.getElementById('timeInput');
             const btn = document.getElementById('timeBtn');
-            
             if (input.value) {
                 display.textContent = '⏰ Kickoff ' + input.value;
             }
@@ -1057,14 +762,15 @@
         }
 
         function resetChecklist() {
-            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            saveChecklistState();
-            updateProgress();
+            if(confirm('ต้องการรีเซ็ตการติ๊กทั้งหมดหรือไม่?')) {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                saveChecklistState();
+                updateProgress();
+            }
         }
 
-        // Edit item functions
         function openEditModal(index) {
             currentEditIndex = index;
             const items = getChecklistItems();
@@ -1081,13 +787,11 @@
 
         function saveEditItem() {
             if (currentEditIndex === null) return;
-            
             const newValue = document.getElementById('editItemInput').value.trim();
             if (!newValue) {
                 alert('กรุณาป้อนข้อความ');
                 return;
             }
-            
             const items = getChecklistItems();
             items[currentEditIndex] = newValue;
             saveChecklistItems(items);
@@ -1101,17 +805,30 @@
                 items.splice(index, 1);
                 saveChecklistItems(items);
                 
-                // Update checked state - remove the deleted item and shift others
+                // Shift saved states
                 const saved = localStorage.getItem('checklistState');
                 if (saved) {
                     const state = JSON.parse(saved);
                     const newState = {};
                     let newIndex = 0;
-                    for (let i = 0; i < Object.keys(state).length; i++) {
-                        if (i !== index) {
-                            newState[`item${newIndex}`] = state[`item${i}`];
-                            newIndex++;
+                    // Rebuild state object skipping the deleted index
+                    for (let i = 0; i <= items.length; i++) { 
+                        if (i !== index && state[`item${i}`] !== undefined) {
+                            // If current i is greater than deleted index, its state maps to newIndex (which is i-1 effectively)
+                            // But safest way is just to iterate through old keys
                         }
+                    }
+                    // Easier way: Rely on array order re-render logic. 
+                    // Since we delete by index, we should also shift the checked status.
+                    // Let's rebuild state from the current logical array assuming unchecked if moved
+                    // Or better: map old state to new indices.
+                    const oldKeys = Object.keys(state).sort((a,b) => parseInt(a.replace('item','')) - parseInt(b.replace('item','')));
+                    let targetIdx = 0;
+                    for(let i=0; i<oldKeys.length; i++) {
+                         let currentIdx = parseInt(oldKeys[i].replace('item',''));
+                         if(currentIdx === index) continue; // Skip deleted
+                         newState[`item${targetIdx}`] = state[`item${currentIdx}`];
+                         targetIdx++;
                     }
                     localStorage.setItem('checklistState', JSON.stringify(newState));
                 }
@@ -1123,12 +840,10 @@
         function addNewItem() {
             const input = document.getElementById('newItemInput');
             const newValue = input.value.trim();
-            
             if (!newValue) {
                 alert('กรุณาป้อนข้อความ');
                 return;
             }
-            
             const items = getChecklistItems();
             items.push(newValue);
             saveChecklistItems(items);
@@ -1136,7 +851,6 @@
             renderChecklist();
         }
 
-        // Allow Enter key to save editable fields
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 if (e.target.id === 'teamInput') saveTeams();
@@ -1147,7 +861,6 @@
             }
         });
 
-        // Close modal when clicking outside
         document.getElementById('editModal').addEventListener('click', (e) => {
             if (e.target.id === 'editModal') {
                 closeEditModal();
