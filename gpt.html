@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>Checklist — Thai League</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+        input, button, textarea { -webkit-user-select: text; user-select: text; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 600px; width: 100%; padding: 30px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
+        .trophy { font-size: 2.5em; margin-bottom: 10px; }
+        h1 { color: #333; font-size: 1.8em; margin-bottom: 10px; }
+        .match-info { color: #666; font-size: 0.95em; line-height: 1.6; }
+        .editable-field { display:flex; align-items:center; justify-content:center; gap:8px; margin:8px 0; }
+        .editable-field input { padding:8px 12px; border:2px solid #667eea; border-radius:6px; font-size:0.95em; width:auto; max-width:300px; }
+        .editable-field button { padding:6px 12px; background:#667eea; color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.85em; transition:all .3s; }
+        .display-field { cursor:pointer; padding:5px 10px; border-radius:4px; transition:all .2s; position:relative; }
+        .display-field::after { content:' ✏️'; font-size:0.8em; opacity:0.5; margin-left:4px; transition:opacity .2s; }
+        .display-field:hover { background:#e9ecef; }
+        .display-field:hover::after { opacity:1; }
+        .checklist { margin-bottom:30px; }
+        .progress-section { margin-bottom:10px; }
+        .progress-label { display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.8em; color:#666; }
+        .progress-bar { width:100%; height:6px; background:#e9ecef; border-radius:10px; overflow:hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-fill { height:100%; background: linear-gradient(90deg, #667eea, #764ba2); width:0%; transition:width .3s ease; border-radius:10px; }
+        .section-title { color:#667eea; font-weight:600; margin:20px 0 15px 0; font-size:1.1em; }
+        .checklist-item { display:flex; align-items:center; padding:12px; margin-bottom:10px; background:#f8f9fa; border-radius:8px; cursor:grab; transition:all .15s ease; touch-action:none; gap:10px; user-select:none; -webkit-user-select:none; }
+        .checklist-item.dragging { opacity:0.6; transform:scale(1.02); box-shadow:0 10px 30px rgba(0,0,0,0.15); cursor:grabbing; }
+        .checklist-item.placeholder { border:2px dashed #667eea; background: rgba(102,126,234,0.06); min-height:48px; }
+        .checklist-item input[type="checkbox"] { width:20px; height:20px; cursor:pointer; accent-color:#667eea; flex-shrink:0; }
+        .checklist-item label { cursor:pointer; color:#333; font-size:0.95em; flex-grow:1; word-break:break-word; }
+        .checklist-item input[type="checkbox"]:checked + label { color:#999; text-decoration:line-through; }
+        .item-actions { margin-left:auto; display:flex; gap:4px; flex-shrink:0; }
+        .actions { display:flex; gap:10px; margin-top:30px; flex-wrap:wrap; }
+        button { flex:1; min-width:150px; padding:12px 20px; border:none; border-radius:8px; font-size:0.95em; font-weight:600; cursor:pointer; transition:all .3s; -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+        .btn-copy { background:#667eea; color:white; }
+        .btn-reset { background:#e9ecef; color:#333; }
+        .copy-feedback { display:none; position:fixed; top:20px; right:20px; background:#28a745; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.2); z-index:1000; animation:slideIn .3s ease; }
+        .copy-feedback.show { display:block; }
+        .item-btn { padding:2px 6px; background:transparent; color:#667eea; border:1px solid #ccc; border-radius:3px; cursor:pointer; font-size:0.65em; transition:all .2s; opacity:0.7; min-width:auto; flex:0 1 auto; }
+        .item-btn.delete { color:#dc3545; border-color:#dc3545; }
+        .add-item-section { display:flex; gap:8px; margin-top:15px; padding:12px; background:#f8f9fa; border-radius:8px; }
+        .add-item-section input { flex-grow:1; padding:8px 12px; border:2px solid #667eea; border-radius:6px; font-size:0.95em; }
+        .add-item-section button { padding:8px 16px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.95em; font-weight:600; transition:all .3s; }
+        .edit-item-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center; }
+        .edit-item-modal.show { display:flex; }
+        .edit-item-content { background:white; padding:30px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.3); max-width:400px; width:90%; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+        @media (max-width:768px) { .container{padding:15px;border-radius:8px;} .checklist-item{padding:14px;} }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="trophy">⚽🇹🇭</div>
+            <h1>Thai League</h1>
+            <div class="match-info">
+                <div class="editable-field">
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">⚽ จันทบุรี vs ศรีสะเกษ</span>
+                    <input type="text" id="teamInput" style="display:none;" placeholder="เช่น จันทบุรี vs ศรีสะเกษ">
+                    <button id="teamBtn" style="display:none;" onclick="saveTeams()">Save</button>
+                </div>
+                <div class="editable-field">
+                    <span class="display-field" id="dateDisplay" onclick="editDate()">📅 29 November 2025</span>
+                    <input type="date" id="dateInput" style="display:none;">
+                    <button id="dateBtn" style="display:none;" onclick="saveDate()">Save</button>
+                </div>
+                <div class="editable-field">
+                    <span class="display-field" id="timeDisplay" onclick="editTime()">⏰ Kickoff 18:30</span>
+                    <input type="time" id="timeInput" style="display:none;">
+                    <button id="timeBtn" style="display:none;" onclick="saveTime()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="checklist">
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>ความคืบหน้า</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="section-title">📋 รายการเช็คงานก่อนแข่ง</div>
+            <div id="checklistContainer"></div>
+
+            <div class="add-item-section">
+                <input type="text" id="newItemInput" placeholder="เพิ่มรายการใหม่...">
+                <button onclick="addNewItem()">➕ เพิ่ม</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-copy" onclick="copyToClipboard()">📋 Copy Text</button>
+            <button class="btn-reset" onclick="resetChecklist()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="feedback">✓ คัดลอกแล้ว!</div>
+
+    <div class="edit-item-modal" id="editModal">
+        <div class="edit-item-content">
+            <h2>แก้ไขรายการ</h2>
+            <input type="text" id="editItemInput" placeholder="แก้ไขข้อความ">
+            <div class="edit-item-actions" style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+                <button style="background:#667eea;color:white;padding:8px 12px;border-radius:6px;border:none;" onclick="saveEditItem()">💾 บันทึก</button>
+                <button style="background:#e9ecef;color:#333;padding:8px 12px;border-radius:6px;border:none;" onclick="closeEditModal()">❌ ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // -------------------------
+    // Checklist core (original)
+    // -------------------------
+
+    // Default items
+    const defaultItems = [
+        'นัดเพลนกล้อง','เพลนกล้อง','ตีเส้น','ทุ่มบอล , sync ball','เช็ค pgm จาก ob 3จอ',
+        'เทส Vokero','Export test sound','เช็คจอ RRA ข้างสนาม','ผู้ตัดสินตรวจสนาม',
+        'เตรียมวิดีโอให้ผู้ตัดสิน','พร้อมแข่ง'
+    ];
+
+    let currentEditIndex = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadChecklistState();
+        loadEditableFields();
+        renderChecklist();
+    });
+
+    /* ========== Checklist storage helpers ========== */
+    function getChecklistItems() {
+        const saved = localStorage.getItem('checklistItems');
+        return saved ? JSON.parse(saved) : defaultItems.slice();
+    }
+    function saveChecklistItems(items) {
+        localStorage.setItem('checklistItems', JSON.stringify(items));
+    }
+    function getChecklistStateObj() {
+        const saved = localStorage.getItem('checklistState');
+        return saved ? JSON.parse(saved) : {};
+    }
+    function saveChecklistStateObj(obj) {
+        localStorage.setItem('checklistState', JSON.stringify(obj));
+    }
+
+    function getItemCheckedState(index) {
+        const state = getChecklistStateObj();
+        return !!state[`item${index}`];
+    }
+
+    function saveChecklistState() {
+        // gather checkboxes by current order
+        const items = getChecklistItems();
+        const state = {};
+        items.forEach((_, index) => {
+            const cb = document.getElementById(`item${index}`);
+            state[`item${index}`] = cb ? cb.checked : false;
+        });
+        saveChecklistStateObj(state);
+    }
+
+    /* ========== Render ========== */
+    function renderChecklist() {
+        const container = document.getElementById('checklistContainer');
+        container.innerHTML = '';
+
+        const items = getChecklistItems();
+        items.forEach((item, index) => {
+            const checked = getItemCheckedState(index);
+            const itemElement = document.createElement('div');
+            itemElement.className = 'checklist-item';
+            itemElement.setAttribute('data-index', index);
+            itemElement.innerHTML = `
+                <input type="checkbox" id="item${index}" ${checked ? 'checked' : ''} onchange="saveChecklistState(); updateProgress();">
+                <label for="item${index}">${escapeHtml(item)}</label>
+                <div class="item-actions">
+                    <button class="item-btn" onclick="openEditModal(${index})">✏️ แก้ไข</button>
+                    <button class="item-btn delete" onclick="deleteItem(${index})">🗑️ ลบ</button>
+                </div>
+            `;
+            container.appendChild(itemElement);
+        });
+
+        updateProgress();
+        // ถ้ามีฟังก์ชันการเปิดใช้ drag แบบรวมในไฟล์นี้ ให้เรียกได้ (ถ้ามี)
+        if (typeof enableDragReorder === 'function') try { enableDragReorder(); } catch(e){}
+    }
+
+    /* ========== Editable fields ========== */
+    function saveEditableFields() {
+        const data = {
+            teams: document.getElementById('teamDisplay').textContent,
+            date: document.getElementById('dateDisplay').textContent,
+            time: document.getElementById('timeDisplay').textContent
+        };
+        localStorage.setItem('matchInfo', JSON.stringify(data));
+    }
+    function loadEditableFields() {
+        const saved = localStorage.getItem('matchInfo');
+        if (saved) {
+            const data = JSON.parse(saved);
+            document.getElementById('teamDisplay').textContent = data.teams;
+            document.getElementById('dateDisplay').textContent = data.date;
+            document.getElementById('timeDisplay').textContent = data.time;
+        }
+    }
+
+    /* ========== Text export & UI helpers ========== */
+    function getChecklistText() {
+        const teams = document.getElementById('teamDisplay').textContent;
+        const date = document.getElementById('dateDisplay').textContent;
+        const time = document.getElementById('timeDisplay').textContent;
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+        const totalCount = checkboxes.length;
+        const percentage = totalCount === 0 ? 0 : Math.round((checkedCount / totalCount) * 100);
+        const filledLength = Math.round((percentage / 100) * 10);
+        const emptyLength = 10 - filledLength;
+        const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
+
+        const lines = [
+            '⚽🇹🇭 Thai League',
+            teams,
+            date,
+            time,
+            '',
+            '📋 รายการเช็คงานก่อนแข่ง',
+            `ความคืบหน้า: [${progressBar}] ${percentage}%`,
+            ''
+        ];
+
+        const items = getChecklistItems();
+        items.forEach((item, index) => {
+            const checkbox = document.getElementById(`item${index}`);
+            const status = checkbox && checkbox.checked ? '✅' : '⬜';
+            lines.push(`${status} ${item}`);
+        });
+
+        return lines.join('\n');
+    }
+    function copyToClipboard() {
+        const text = getChecklistText();
+        navigator.clipboard.writeText(text).then(showFeedback).catch(err => console.error('Failed to copy', err));
+    }
+    function showFeedback() {
+        const f = document.getElementById('feedback');
+        f.classList.add('show');
+        setTimeout(()=>f.classList.remove('show'), 2000);
+    }
+    function updateProgress() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+        const totalCount = checkboxes.length;
+        const percentage = totalCount === 0 ? 0 : Math.round((checkedCount / totalCount) * 100);
+        document.getElementById('progressFill').style.width = percentage + '%';
+        document.getElementById('progressPercent').textContent = percentage + '%';
+    }
+    function resetChecklist() {
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        saveChecklistState();
+        updateProgress();
+    }
+
+    /* ========== Edit / Delete / Add ========== */
+    function openEditModal(index) {
+        currentEditIndex = index;
+        const items = getChecklistItems();
+        const input = document.getElementById('editItemInput');
+        input.value = items[index] || '';
+        input.focus();
+        document.getElementById('editModal').classList.add('show');
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+        currentEditIndex = null;
+    }
+    function saveEditItem() {
+        if (currentEditIndex === null) return;
+        const newValue = document.getElementById('editItemInput').value.trim();
+        if (!newValue) { alert('กรุณาป้อนข้อความ'); return; }
+        const items = getChecklistItems();
+        items[currentEditIndex] = newValue;
+        saveChecklistItems(items);
+        renderChecklist();
+        closeEditModal();
+    }
+    function deleteItem(index) {
+        if (!confirm('คุณแน่ใจหรือว่าต้องการลบรายการนี้?')) return;
+        const items = getChecklistItems();
+        items.splice(index,1);
+        saveChecklistItems(items);
+
+        // Rebuild state: shift indices accordingly
+        const oldState = getChecklistStateObj();
+        const newState = {};
+        let newIdx = 0;
+        for (let i = 0; i < Object.keys(oldState).length; i++) {
+            if (i === index) continue;
+            newState[`item${newIdx}`] = oldState[`item${i}`];
+            newIdx++;
+        }
+        saveChecklistStateObj(newState);
+        renderChecklist();
+    }
+    function addNewItem() {
+        const input = document.getElementById('newItemInput');
+        const newValue = input.value.trim();
+        if (!newValue) { alert('กรุณาป้อนข้อความ'); return; }
+        const items = getChecklistItems();
+        items.push(newValue);
+        saveChecklistItems(items);
+        input.value = '';
+        renderChecklist();
+    }
+
+    /* ========== Editable fields handlers ========== */
+    function editTeams() {
+        const display = document.getElementById('teamDisplay');
+        const input = document.getElementById('teamInput');
+        const btn = document.getElementById('teamBtn');
+        input.value = display.textContent.replace('⚽ ','');
+        display.style.display='none'; input.style.display='inline-block'; btn.style.display='inline-block'; input.focus();
+    }
+    function saveTeams() {
+        const display = document.getElementById('teamDisplay');
+        const input = document.getElementById('teamInput');
+        const btn = document.getElementById('teamBtn');
+        const newValue = input.value.trim() || 'จันทบุรี vs ศรีสะเกษ';
+        display.textContent = '⚽ ' + newValue;
+        display.style.display='inline-block'; input.style.display='none'; btn.style.display='none';
+        saveEditableFields();
+    }
+    function editDate() {
+        const display = document.getElementById('dateDisplay');
+        const input = document.getElementById('dateInput');
+        const btn = document.getElementById('dateBtn');
+        const dateText = display.textContent.replace('📅 ','');
+        const date = new Date(dateText);
+        const dateString = isNaN(date) ? '' : date.toISOString().split('T')[0];
+        input.value = dateString;
+        display.style.display='none'; input.style.display='inline-block'; btn.style.display='inline-block'; input.focus();
+    }
+    function saveDate() {
+        const display = document.getElementById('dateDisplay');
+        const input = document.getElementById('dateInput');
+        const btn = document.getElementById('dateBtn');
+        if (input.value) {
+            const date = new Date(input.value);
+            const options = { year:'numeric', month:'long', day:'numeric' };
+            const formattedDate = date.toLocaleDateString('en-US', options);
+            display.textContent = '📅 ' + formattedDate;
+        }
+        display.style.display='inline-block'; input.style.display='none'; btn.style.display='none';
+        saveEditableFields();
+    }
+    function editTime() {
+        const display = document.getElementById('timeDisplay');
+        const input = document.getElementById('timeInput');
+        const btn = document.getElementById('timeBtn');
+        const timeText = display.textContent.replace('⏰ Kickoff ','');
+        input.value = timeText;
+        display.style.display='none'; input.style.display='inline-block'; btn.style.display='inline-block'; input.focus();
+    }
+    function saveTime() {
+        const display = document.getElementById('timeDisplay');
+        const input = document.getElementById('timeInput');
+        const btn = document.getElementById('timeBtn');
+        if (input.value) display.textContent = '⏰ Kickoff ' + input.value;
+        display.style.display='inline-block'; input.style.display='none'; btn.style.display='none';
+        saveEditableFields();
+    }
+
+    /* ========== Keyboard Enter shortcuts ========== */
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            if (e.target.id === 'teamInput') saveTeams();
+            if (e.target.id === 'dateInput') saveDate();
+            if (e.target.id === 'timeInput') saveTime();
+            if (e.target.id === 'editItemInput') saveEditItem();
+            if (e.target.id === 'newItemInput') addNewItem();
+        }
+    });
+    document.getElementById('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeEditModal(); });
+
+    /* ========== Drag & reorder implementation (long-press + drag) ==========
+       This implementation is included here (non-destructive assumption: it does not overwrite
+       the storage/render functions that already exist).
+    */
+    function enableDragReorder() {
+        const container = document.getElementById('checklistContainer');
+        if (!container) return;
+        let pointerId = null;
+        let longPressTimer = null;
+        let draggingEl = null;
+        let placeholder = null;
+        let draggedGhost = null;
+        let startY = 0;
+        let offsetY = 0;
+        let initialIndex = -1;
+
+        // cleanup previous bindings to avoid duplicates
+        container.querySelectorAll('.checklist-item').forEach(el => {
+            el.onpointerdown = null;
+            el.onpointermove = null;
+            el.onpointerup = null;
+            el.onpointercancel = null;
+            el.style.touchAction = 'none';
+        });
+
+        container.querySelectorAll('.checklist-item').forEach(el => {
+            el.addEventListener('pointerdown', (ev) => {
+                if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+                ev.preventDefault();
+                pointerId = ev.pointerId;
+                startY = ev.clientY;
+                initialIndex = Number(el.getAttribute('data-index'));
+
+                longPressTimer = setTimeout(() => {
+                    draggingEl = el;
+                    draggingEl.classList.add('dragging');
+
+                    placeholder = document.createElement('div');
+                    placeholder.className = 'checklist-item placeholder';
+                    placeholder.style.height = `${draggingEl.offsetHeight}px`;
+                    container.insertBefore(placeholder, draggingEl.nextSibling);
+
+                    draggedGhost = draggingEl.cloneNode(true);
+                    draggedGhost.style.position = 'fixed';
+                    draggedGhost.style.left = `${draggingEl.getBoundingClientRect().left}px`;
+                    draggedGhost.style.top = `${draggingEl.getBoundingClientRect().top}px`;
+                    draggedGhost.style.width = `${draggingEl.offsetWidth}px`;
+                    draggedGhost.style.pointerEvents = 'none';
+                    draggedGhost.style.zIndex = 9999;
+                    draggedGhost.style.opacity = '0.95';
+                    document.body.appendChild(draggedGhost);
+
+                    offsetY = ev.clientY - draggingEl.getBoundingClientRect().top;
+                }, 250);
+
+                el.setPointerCapture && el.setPointerCapture(pointerId);
+            });
+
+            el.addEventListener('pointermove', (ev) => {
+                if (!draggingEl) return;
+                ev.preventDefault();
+                draggedGhost.style.top = `${ev.clientY - offsetY}px`;
+
+                const below = document.elementFromPoint(ev.clientX, ev.clientY);
+                if (!below) return;
+                const nearestItem = below.closest && below.closest('.checklist-item');
+                if (!nearestItem || nearestItem === placeholder || nearestItem === draggingEl) return;
+
+                const rect = nearestItem.getBoundingClientRect();
+                const insertBefore = (ev.clientY < rect.top + rect.height / 2);
+                if (insertBefore) container.insertBefore(placeholder, nearestItem);
+                else container.insertBefore(placeholder, nearestItem.nextSibling);
+            });
+
+            el.addEventListener('pointerup', (ev) => {
+                clearTimeout(longPressTimer);
+                if (!draggingEl) {
+                    if (pointerId) {
+                        try { el.releasePointerCapture && el.releasePointerCapture(pointerId); } catch(e){}
+                        pointerId = null;
+                    }
+                    return;
+                }
+
+                ev.preventDefault();
+                const items = getChecklistItems();
+                const oldIndex = initialIndex;
+                const newIndex = Array.from(container.children).indexOf(placeholder);
+                if (newIndex >= 0) {
+                    draggedGhost && draggedGhost.remove();
+                    placeholder.replaceWith(draggingEl);
+                    draggingEl.classList.remove('dragging');
+
+                    const movedItem = items.splice(oldIndex, 1)[0];
+                    items.splice(newIndex, 0, movedItem);
+                    saveChecklistItems(items);
+
+                    // reorder state object preserving checked
+                    const oldState = getChecklistStateObj();
+                    const newState = {};
+                    const domItems = Array.from(container.querySelectorAll('.checklist-item'));
+                    domItems.forEach((domEl, idx) => {
+                        const input = domEl.querySelector('input[type="checkbox"]');
+                        if (input) {
+                            newState[`item${idx}`] = input.checked;
+                        } else {
+                            newState[`item${idx}`] = false;
+                        }
+                    });
+                    saveChecklistStateObj(newState);
+                }
+
+                try { el.releasePointerCapture && el.releasePointerCapture(pointerId); } catch(e){}
+                pointerId = null;
+                longPressTimer = null;
+                draggingEl = null;
+                placeholder = null;
+                updateProgress();
+                renderChecklist();
+            });
+
+            el.addEventListener('pointercancel', () => {
+                clearTimeout(longPressTimer);
+                if (draggingEl) {
+                    draggingEl.classList.remove('dragging');
+                    draggedGhost && draggedGhost.remove();
+                    placeholder && placeholder.remove();
+                }
+                longPressTimer = null;
+                draggingEl = null;
+                placeholder = null;
+            });
+        });
+    }
+
+    /* Utility: escape HTML for safe insertion into label */
+    function escapeHtml(text) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, function(m){ return map[m]; });
+    }
+    </script>
+
+    <!-- ===========================
+         Non-destructive enhancer
+         (วางเพิ่มไว้ท้ายสุด — จะไม่เขียนทับฟังก์ชันเดิม)
+         =========================== -->
+    <script>
+    (function(){
+      // ถ้าโหลดแล้ว ไม่ต้องทำซ้ำ
+      if (window._checklistDragEnhancerInstalled) return;
+      window._checklistDragEnhancerInstalled = true;
+
+      const LONG_PRESS_MS = 250; // ปรับค่าได้
+
+      function getContainer() {
+        return document.getElementById('checklistContainer');
+      }
+      function getItemsNodes() {
+        const container = getContainer();
+        return container ? Array.from(container.querySelectorAll('.checklist-item')) : [];
+      }
+
+      if (!getContainer()) return;
+
+      let longPressTimer = null;
+      let dragging = null;
+      let ghost = null;
+      let placeholder = null;
+      let startIndex = -1;
+      let pointerId = null;
+      let offsetY = 0;
+
+      function makePlaceholder(height) {
+        const ph = document.createElement('div');
+        ph.className = 'checklist-item placeholder';
+        if (height) ph.style.height = height + 'px';
+        return ph;
+      }
+
+      function makeGhost(el) {
+        const clone = el.cloneNode(true);
+        clone.style.position = 'fixed';
+        const r = el.getBoundingClientRect();
+        clone.style.left = r.left + 'px';
+        clone.style.top = r.top + 'px';
+        clone.style.width = r.width + 'px';
+        clone.style.pointerEvents = 'none';
+        clone.style.zIndex = 9999;
+        clone.style.opacity = '0.95';
+        document.body.appendChild(clone);
+        return clone;
+      }
+
+      function attachToItems() {
+        const nodes = getItemsNodes();
+        nodes.forEach(node => {
+          if (node._dragBound) return;
+          node._dragBound = true;
+
+          node.addEventListener('pointerdown', onPointerDown);
+          node.addEventListener('pointermove', onPointerMove);
+          node.addEventListener('pointerup', onPointerUp);
+          node.addEventListener('pointercancel', onPointerCancel);
+          node.style.touchAction = 'none';
+        });
+      }
+
+      function onPointerDown(ev) {
+        if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+        ev.preventDefault();
+
+        pointerId = ev.pointerId;
+        ev.target.setPointerCapture && ev.target.setPointerCapture(pointerId);
+
+        const item = ev.currentTarget;
+        startIndex = Array.from(getContainer().children).indexOf(item);
+        longPressTimer = setTimeout(() => {
+          dragging = item;
+          dragging.classList.add('dragging');
+          placeholder = makePlaceholder(dragging.offsetHeight);
+          const container = getContainer();
+          container.insertBefore(placeholder, dragging.nextSibling);
+          ghost = makeGhost(dragging);
+          const rect = dragging.getBoundingClientRect();
+          offsetY = ev.clientY - rect.top;
+        }, LONG_PRESS_MS);
+      }
+
+      function onPointerMove(ev) {
+        if (!dragging) return;
+        ev.preventDefault();
+        if (ghost) ghost.style.top = (ev.clientY - offsetY) + 'px';
+
+        const elUnder = document.elementFromPoint(ev.clientX, ev.clientY);
+        if (!elUnder) return;
+        const nearest = elUnder.closest && elUnder.closest('.checklist-item');
+        const container = getContainer();
+        if (!nearest || nearest === placeholder || nearest === dragging) return;
+
+        const rect = nearest.getBoundingClientRect();
+        const before = (ev.clientY < rect.top + rect.height / 2);
+        if (before) container.insertBefore(placeholder, nearest);
+        else container.insertBefore(placeholder, nearest.nextSibling);
+      }
+
+      function finalizeReorder() {
+        if (!dragging || !placeholder) return;
+        const container = getContainer();
+        const newIndex = Array.from(container.children).indexOf(placeholder);
+
+        ghost && ghost.remove();
+        placeholder.replaceWith(dragging);
+        dragging.classList.remove('dragging');
+
+        try {
+          let itemsArr = Array.isArray(window.getChecklistItems ? window.getChecklistItems() : null)
+            ? window.getChecklistItems()
+            : (function(){
+                return Array.from(container.querySelectorAll('.checklist-item label')).map(l => l.textContent.trim());
+              })();
+
+          if (Array.isArray(itemsArr) && startIndex >=0 && newIndex >=0 && startIndex < itemsArr.length) {
+            const moved = itemsArr.splice(startIndex, 1)[0];
+            itemsArr.splice(newIndex, 0, moved);
+            if (typeof window.saveChecklistItems === 'function') {
+              window.saveChecklistItems(itemsArr);
+            } else {
+              localStorage.setItem('checklistItems', JSON.stringify(itemsArr));
+            }
+          }
+        } catch (e) {
+          console.warn('reorder: failed to use existing storage functions', e);
+        }
+
+        try {
+          const newState = {};
+          Array.from(container.querySelectorAll('.checklist-item')).forEach((domEl, idx) => {
+            const cb = domEl.querySelector('input[type="checkbox"]');
+            newState[`item${idx}`] = cb ? !!cb.checked : false;
+          });
+          if (typeof window.saveChecklistStateObj === 'function') {
+            window.saveChecklistStateObj(newState);
+          } else {
+            localStorage.setItem('checklistState', JSON.stringify(newState));
+          }
+        } catch (e) {
+          console.warn('reorder: failed to save checklist state', e);
+        }
+
+        if (typeof window.renderChecklist === 'function') {
+          window.renderChecklist();
+        } else {
+          if (typeof window.updateProgress === 'function') window.updateProgress();
+        }
+
+        dragging = null; ghost = null; placeholder = null; startIndex = -1;
+      }
+
+      function onPointerUp(ev) {
+        clearTimeout(longPressTimer);
+        if (!dragging) {
+          try { ev.currentTarget.releasePointerCapture && ev.currentTarget.releasePointerCapture(pointerId); } catch(e){}
+          pointerId = null;
+          return;
+        }
+        try { ev.currentTarget.releasePointerCapture && ev.currentTarget.releasePointerCapture(pointerId); } catch(e){}
+        pointerId = null;
+        finalizeReorder();
+      }
+
+      function onPointerCancel(ev) {
+        clearTimeout(longPressTimer);
+        if (dragging) {
+          dragging.classList.remove('dragging');
+          ghost && ghost.remove();
+          placeholder && placeholder.remove();
+        }
+        dragging = null; ghost = null; placeholder = null; startIndex = -1;
+        pointerId = null;
+      }
+
+      function init() {
+        attachToItems();
+
+        if (typeof window.renderChecklist === 'function' && !window._renderChecklistWrapped) {
+          const orig = window.renderChecklist;
+          window._renderChecklistWrapped = true;
+          window._originalRender = orig;
+          window.renderChecklist = function() {
+            const res = orig.apply(this, arguments);
+            setTimeout(attachToItems, 20);
+            return res;
+          };
+        } else {
+          const container = getContainer();
+          if (container && !window._checklistMutObserver) {
+            const mo = new MutationObserver(() => { attachToItems(); });
+            mo.observe(container, { childList: true, subtree: false });
+            window._checklistMutObserver = mo;
+          }
+        }
+      }
+
+      init();
+
+      window.checklistDragEnhancer = {
+        reattach: attachToItems,
+        uninstall: function() {
+          getItemsNodes().forEach(n => {
+            try {
+              n.removeEventListener('pointerdown', onPointerDown);
+              n.removeEventListener('pointermove', onPointerMove);
+              n.removeEventListener('pointerup', onPointerUp);
+              n.removeEventListener('pointercancel', onPointerCancel);
+              delete n._dragBound;
+            } catch(e){}
+          });
+          if (window._renderChecklistWrapped && window._originalRender) {
+            window.renderChecklist = window._originalRender;
+            window._renderChecklistWrapped = false;
+          }
+          if (window._checklistMutObserver) {
+            window._checklistMutObserver.disconnect();
+            delete window._checklistMutObserver;
+          }
+          delete window._checklistDragEnhancerInstalled;
+        }
+      };
+
+    })();
+    </script>
+</body>
+</html>

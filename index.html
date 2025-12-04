@@ -6,13 +6,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         input, button, textarea {
@@ -30,7 +30,6 @@
             align-items: center; 
             justify-content: flex-start;
         }
-
         .container {
             background: white;
             border-radius: 12px;
@@ -38,8 +37,6 @@
             max-width: 600px;
             width: 100%;
             padding: 30px;
-            margin-top: 20px;
-            margin-bottom: 20px;
         }
 
         .header {
@@ -66,13 +63,16 @@
             line-height: 1.6;
         }
 
+        .match-info div {
+            margin: 8px 0;
+        }
+
         .editable-field {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             margin: 8px 0;
-            flex-wrap: wrap;
         }
 
         .editable-field input {
@@ -81,7 +81,7 @@
             border-radius: 6px;
             font-size: 0.95em;
             width: auto;
-            max-width: 100%;
+            max-width: 300px;
         }
 
         .editable-field button {
@@ -92,6 +92,11 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+
+        .editable-field button:hover {
+            background: #5568d3;
         }
 
         .display-field {
@@ -99,10 +104,23 @@
             padding: 5px 10px;
             border-radius: 4px;
             transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .display-field::after {
+            content: ' ✏️';
+            font-size: 0.8em;
+            opacity: 0.5;
+            margin-left: 4px;
+            transition: opacity 0.2s ease;
         }
 
         .display-field:hover {
             background: #e9ecef;
+        }
+
+        .display-field:hover::after {
+            opacity: 1;
         }
 
         .checklist {
@@ -127,6 +145,7 @@
             background: #e9ecef;
             border-radius: 10px;
             overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .progress-fill {
@@ -144,52 +163,41 @@
             font-size: 1.1em;
         }
 
-        /* --- แก้ไข CSS ส่วน Checklist Item ให้แสดงผลถูกต้อง --- */
         .checklist-item {
             display: flex;
-            align-items: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
-            justify-content: space-between;
+            align-items: center;
             padding: 12px;
             margin-bottom: 10px;
             background: #f8f9fa;
             border-radius: 8px;
-            transition: background-color 0.2s;
-            position: relative;
-            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            gap: 10px;
         }
 
-        /* 1. ตัวลาก: ห้ามย่อขยาย Fix ขนาดไว้ */
-        .drag-handle {
-            flex: 0 0 auto; 
-            color: #ccc;
-            padding: 5px 10px 5px 0;
-            cursor: move;
-            font-size: 1.2em;
-            line-height: 1;
-            touch-action: none;
+        .checklist-item:active {
+            background: #e0e3ff;
         }
 
-        /* 2. Checkbox: ห้ามย่อขยาย */
+        .checklist-item:hover {
+            background: #e9ecef;
+        }
+
         .checklist-item input[type="checkbox"] {
-            flex: 0 0 auto;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
             accent-color: #667eea;
-            margin-right: 12px;
+            flex-shrink: 0;
         }
 
-        /* 3. ข้อความ (Label): ให้กินพื้นที่ที่เหลือทั้งหมด แต่ต้องไม่ล้น */
         .checklist-item label {
-            flex: 1 1 auto; /* Grow=1, Shrink=1 */
-            min-width: 0; /* สำคัญ! ป้องกัน flex item ดันจนล้น */
             cursor: pointer;
             color: #333;
             font-size: 0.95em;
-            word-break: break-word; /* ตัดคำถ้ายาวเกิน แต่ไม่ตัดทีละตัวอักษร */
-            line-height: 1.4;
-            margin-right: 8px;
-            text-align: left; /* บังคับชิดซ้าย */
+            flex-grow: 1;
+            word-break: break-word;
         }
 
         .checklist-item input[type="checkbox"]:checked + label {
@@ -197,40 +205,9 @@
             text-decoration: line-through;
         }
 
-        /* 4. ปุ่ม Action (ขวาสุด): ห้ามย่อขยาย */
         .checklist-item .item-actions {
-            flex: 0 0 auto;
-            display: flex;
-            gap: 6px;
-            align-items: center;
+            margin-left: auto;
         }
-
-        .item-btn {
-            padding: 6px 10px;
-            background: white;
-            color: #667eea;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            min-width: 35px; /* กำหนดความกว้างขั้นต่ำให้ปุ่ม */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .item-btn.delete {
-            color: #dc3545;
-            border-color: #f5c6cb;
-        }
-
-        /* Sortable ghost state */
-        .sortable-ghost {
-            opacity: 0.4;
-            background: #e0e3ff;
-            border: 1px dashed #667eea;
-        }
-        /* ---------------------------------------------------- */
 
         .actions {
             display: flex;
@@ -239,7 +216,7 @@
             flex-wrap: wrap;
         }
 
-        button.main-action {
+        button {
             flex: 1;
             min-width: 150px;
             padding: 12px 20px;
@@ -249,38 +226,34 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        .btn-copy { background: #667eea; color: white; }
-        .btn-copy:hover { background: #5568d3; }
-        .btn-reset { background: #e9ecef; color: #333; }
-        .btn-reset:hover { background: #dee2e6; }
-
-        .add-item-section {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
+        button:active {
+            transform: scale(0.98);
         }
 
-        .add-item-section input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            font-size: 0.95em;
-        }
-
-        .add-item-section button {
-            padding: 10px 20px;
-            background: #28a745;
+        .btn-copy {
+            background: #667eea;
             color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            white-space: nowrap; /* ป้องกันข้อความในปุ่มตกบรรทัด */
+        }
+
+        .btn-copy:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #dee2e6;
+            transform: translateY(-2px);
         }
 
         .copy-feedback {
@@ -297,7 +270,78 @@
             animation: slideIn 0.3s ease;
         }
 
-        .copy-feedback.show { display: block; }
+        .copy-feedback.show {
+            display: block;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 0;
+            flex-shrink: 0;
+        }
+
+        .item-btn {
+            padding: 2px 6px;
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.65em;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            white-space: nowrap;
+            min-width: auto;
+            flex: 0 1 auto;
+        }
+
+        .item-btn:hover {
+            background: #f0f0f0;
+            opacity: 1;
+        }
+
+        .item-btn.delete {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .item-btn.delete:hover {
+            background: #fff5f5;
+        }
+
+        .add-item-section {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .add-item-section input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .add-item-section button {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-item-section button:hover {
+            background: #218838;
+        }
 
         .edit-item-modal {
             display: none;
@@ -312,14 +356,23 @@
             align-items: center;
         }
 
-        .edit-item-modal.show { display: flex; }
+        .edit-item-modal.show {
+            display: flex;
+        }
 
         .edit-item-content {
             background: white;
-            padding: 25px;
+            padding: 30px;
             border-radius: 12px;
-            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             max-width: 400px;
+            width: 90%;
+        }
+
+        .edit-item-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
         }
 
         .edit-item-content input {
@@ -327,27 +380,348 @@
             padding: 12px;
             border: 2px solid #667eea;
             border-radius: 6px;
+            font-size: 0.95em;
             margin-bottom: 20px;
+            box-sizing: border-box;
         }
 
-        .edit-item-actions { display: flex; gap: 10px; }
-        .edit-item-actions button { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
-        .edit-item-actions .save { background: #667eea; color: white; }
-        .edit-item-actions .cancel { background: #e9ecef; color: #333; }
+        .edit-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-item-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .edit-item-actions .save {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-item-actions .save:hover {
+            background: #5568d3;
+        }
+
+        .edit-item-actions .cancel {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .edit-item-actions .cancel:hover {
+            background: #dee2e6;
+        }
 
         @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 20px; margin-top: 10px; }
-            .checklist-item { padding: 10px; }
-            .add-item-section { flex-direction: column; }
-            .add-item-section button { width: 100%; }
-            .actions { flex-direction: column; }
-            button.main-action { width: 100%; }
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+                border-radius: 8px;
+            }
+
+            .header {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+
+            .trophy {
+                font-size: 2em;
+                margin-bottom: 8px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+
+            .match-info {
+                font-size: 0.9em;
+            }
+
+            .match-info div {
+                margin: 6px 0;
+            }
+
+            .display-field {
+                padding: 8px 12px;
+                font-size: 0.9em;
+            }
+
+            .editable-field input {
+                padding: 10px 12px;
+                font-size: 0.95em;
+                max-width: 100%;
+                min-width: 200px;
+            }
+
+            .editable-field button {
+                padding: 8px 14px;
+                font-size: 0.8em;
+                min-width: 60px;
+            }
+
+            .section-title {
+                font-size: 1em;
+                margin: 15px 0 12px 0;
+            }
+
+            .checklist-item {
+                padding: 14px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+            }
+
+            .checklist-item input[type="checkbox"] {
+                width: 22px;
+                height: 22px;
+                margin-right: 12px;
+                min-flex-basis: 22px;
+            }
+
+            .checklist-item label {
+                font-size: 0.95em;
+                line-height: 1.4;
+                word-break: break-word;
+            }
+
+            .item-actions {
+                gap: 6px;
+                margin-left: 8px;
+                flex-shrink: 0;
+            }
+
+            .item-btn {
+                padding: 6px 10px;
+                font-size: 0.75em;
+                opacity: 1;
+            }
+
+            .add-item-section {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 12px;
+                padding: 10px;
+            }
+
+            .add-item-section input {
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .add-item-section button {
+                padding: 12px;
+                font-size: 0.95em;
+                width: 100%;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 20px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px 16px;
+                font-size: 0.95em;
+                border-radius: 8px;
+            }
+
+            .progress-section {
+                margin-bottom: 9px;
+            }
+
+            .progress-label {
+                font-size: 0.8em;
+                margin-bottom: 4px;
+            }
+
+            .progress-bar {
+                height: 6px;
+            }
+
+            .edit-item-content {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .edit-item-content h2 {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+
+            .edit-item-content input {
+                padding: 12px;
+                font-size: 1em;
+                margin-bottom: 15px;
+            }
+
+            .copy-feedback {
+                top: 10px;
+                right: 10px;
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .container {
+                padding: 12px;
+                max-width: 100%;
+            }
+
+            .header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #667eea;
+            }
+
+            .trophy {
+                font-size: 1.8em;
+                margin-bottom: 6px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .match-info {
+                font-size: 0.85em;
+            }
+
+            .match-info div {
+                margin: 5px 0;
+            }
+
+            .display-field {
+                padding: 6px 10px;
+                font-size: 0.85em;
+            }
+
+            .editable-field {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .editable-field input {
+                padding: 8px 10px;
+                font-size: 0.9em;
+                min-width: 150px;
+            }
+
+            .editable-field button {
+                padding: 6px 12px;
+                font-size: 0.75em;
+            }
+
+            .section-title {
+                font-size: 0.95em;
+                margin: 12px 0 10px 0;
+            }
+
+            .checklist-item {
+                padding: 12px;
+                margin-bottom: 6px;
+            }
+
+            .checklist-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin-right: 10px;
+            }
+
+            .checklist-item label {
+                font-size: 0.9em;
+            }
+
+            .item-actions {
+                gap: 4px;
+                margin-left: 6px;
+            }
+
+            .item-btn {
+                padding: 5px 8px;
+                font-size: 0.7em;
+            }
+
+            .add-item-section {
+                padding: 8px;
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .add-item-section input {
+                padding: 10px;
+                font-size: 0.95em;
+            }
+
+            .add-item-section button {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+
+            .progress-section {
+                margin-bottom: 7px;
+            }
+
+            .progress-label {
+                font-size: 0.8em;
+            }
+
+            .progress-bar {
+                height: 6px;
+            }
+
+            .actions {
+                gap: 6px;
+                margin-top: 16px;
+            }
+
+            button {
+                padding: 12px 14px;
+                font-size: 0.9em;
+            }
+
+            .edit-item-content {
+                width: 90%;
+                padding: 16px;
+            }
+
+            .edit-item-content h2 {
+                font-size: 1em;
+                margin-bottom: 12px;
+            }
+
+            .edit-item-content input {
+                padding: 10px;
+                font-size: 0.95em;
+            }
         }
     </style>
 </head>
@@ -358,7 +732,7 @@
             <h1>Thai League</h1>
             <div class="match-info">
                 <div class="editable-field">
-                    <span class="display-field" id="teamDisplay" onclick="editTeams()">⚽ จันทบุรี vs ศรีสะเกษ</span>
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">จันทบุรี vs ศรีสะเกษ</span>
                     <input type="text" id="teamInput" style="display: none;" placeholder="เช่น จันทบุรี vs ศรีสะเกษ">
                     <button id="teamBtn" style="display: none;" onclick="saveTeams()">Save</button>
                 </div>
@@ -418,56 +792,39 @@
     </div>
 
     <script>
+        // Default items
         const defaultItems = [
-            'นัดเพลนกล้อง', 'เพลนกล้อง', 'ตีเส้น', 'ทุ่มบอล , sync ball',
-            'เช็ค pgm จาก ob 3จอ', 'เทส Vokero', 'Export test sound',
-            'เช็คจอ RRA ข้างสนาม', 'ผู้ตัดสินตรวจสนาม',
-            'เตรียมวิดีโอให้ผู้ตัดสิน', 'พร้อมแข่ง'
+            'นัดเพลนกล้อง',
+            'เพลนกล้อง',
+            'ตีเส้น',
+            'ทุ่มบอล , sync ball',
+            'เช็ค pgm จาก ob 3จอ',
+            'เทส Vokero',
+            'Export test sound',
+            'เช็คจอ RRA ข้างสนาม',
+            'ผู้ตัดสินตรวจสนาม',
+            'เตรียมวิดีโอให้ผู้ตัดสิน',
+            'พร้อมแข่ง'
         ];
+
+        const STORAGE_KEY_ITEMS = 'checklistItems_v3';
+        const STORAGE_KEY_STATE = 'checklistState_v3';
+        const STORAGE_KEY_MATCH = 'matchInfo_v3';
 
         let currentEditIndex = null;
         let sortableInstance = null;
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadChecklistState();
+            initializeData();
             loadEditableFields();
             renderChecklist();
-            initSortable();
         });
 
-        function initSortable() {
-            const el = document.getElementById('checklistContainer');
-            sortableInstance = new Sortable(el, {
-                animation: 200,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost',
-                onEnd: function (evt) {
-                    updateOrderAfterDrag();
-                }
-            });
-        }
-
-        function updateOrderAfterDrag() {
-            const container = document.getElementById('checklistContainer');
-            const itemElements = container.querySelectorAll('.checklist-item');
-            const newItems = [];
-            const newState = {};
-
-            itemElements.forEach((el, index) => {
-                const text = el.querySelector('label').innerText;
-                const isChecked = el.querySelector('input[type="checkbox"]').checked;
-                newItems.push(text);
-                newState[`item${index}`] = isChecked;
-            });
-
-            saveChecklistItems(newItems);
-            localStorage.setItem('checklistState', JSON.stringify(newState));
-            renderChecklist();
-        }
-
+        // Render checklist items
         function renderChecklist() {
             const container = document.getElementById('checklistContainer');
             container.innerHTML = '';
+            
             const items = getChecklistItems();
             items.forEach((item, index) => {
                 const checked = getItemCheckedState(index);
@@ -488,15 +845,26 @@
         }
 
         function getChecklistItems() {
-            return JSON.parse(localStorage.getItem('checklistItems')) || defaultItems;
+            const saved = localStorage.getItem('checklistItems');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return defaultItems;
         }
+
         function saveChecklistItems(items) {
             localStorage.setItem('checklistItems', JSON.stringify(items));
         }
+
         function getItemCheckedState(index) {
-            const state = JSON.parse(localStorage.getItem('checklistState')) || {};
-            return state[`item${index}`] || false;
+            const saved = localStorage.getItem('checklistState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                return state[`item${index}`] || false;
+            }
+            return false;
         }
+
         function saveChecklistState() {
             const items = getChecklistItems();
             const state = {};
@@ -504,14 +872,18 @@
                 const checkbox = document.getElementById(`item${index}`);
                 if (checkbox) state[`item${index}`] = checkbox.checked;
             });
-            localStorage.setItem('checklistState', JSON.stringify(state));
+            localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
         }
+
         function loadChecklistState() {
-            const state = JSON.parse(localStorage.getItem('checklistState'));
-            if (state) {
+            const saved = localStorage.getItem('checklistState');
+            if (saved) {
+                const state = JSON.parse(saved);
                 Object.keys(state).forEach(key => {
                     const checkbox = document.getElementById(key);
-                    if (checkbox) checkbox.checked = state[key];
+                    if (checkbox) {
+                        checkbox.checked = state[key];
+                    }
                 });
             }
             updateProgress();
@@ -523,21 +895,77 @@
                 date: document.getElementById('dateDisplay').textContent,
                 time: document.getElementById('timeDisplay').textContent
             };
-            localStorage.setItem('matchInfo', JSON.stringify(data));
+            localStorage.setItem(STORAGE_KEY_MATCH, JSON.stringify(data));
         }
         function loadEditableFields() {
-            const data = JSON.parse(localStorage.getItem('matchInfo'));
-            if (data) {
+            const saved = localStorage.getItem('matchInfo');
+            if (saved) {
+                const data = JSON.parse(saved);
                 document.getElementById('teamDisplay').textContent = data.teams;
                 document.getElementById('dateDisplay').textContent = data.date;
                 document.getElementById('timeDisplay').textContent = data.time;
             }
         }
-        
-        function editTeams() { toggleField('team'); }
-        function saveTeams() { 
-            const val = document.getElementById('teamInput').value.trim() || 'จันทบุรี vs ศรีสะเกษ';
-            saveField('team', '⚽ ' + val.replace('⚽ ', '')); 
+
+        function getChecklistText() {
+            const teams = document.getElementById('teamDisplay').textContent;
+            const date = document.getElementById('dateDisplay').textContent;
+            const time = document.getElementById('timeDisplay').textContent;
+
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const totalCount = checkboxes.length;
+            const percentage = totalCount === 0 ? 0 : Math.round((checkedCount / totalCount) * 100);
+
+            const filledLength = Math.round((percentage / 100) * 10);
+            const emptyLength = 10 - filledLength;
+            const progressBar = '█'.repeat(filledLength) + '░'.repeat(emptyLength);
+
+            const lines = [
+                '⚽🇹🇭 Thai League',
+                teams,
+                date,
+                time,
+                '',
+                '📋 รายการเช็คงานก่อนแข่ง',
+                `ความคืบหน้า: [${progressBar}] ${percentage}%`,
+                ''
+            ];
+
+            const items = getChecklistItems();
+            items.forEach((item, index) => {
+                const checkbox = document.getElementById(`item${index}`);
+                const status = checkbox && checkbox.checked ? '✅' : '⬜';
+                lines.push(`${status} ${item}`);
+            });
+
+            return lines.join('\n');
+        }
+
+        function editTeams() {
+            const display = document.getElementById('teamDisplay');
+            const input = document.getElementById('teamInput');
+            const btn = document.getElementById('teamBtn');
+            
+            // เอาเฉพาะข้อความ ไม่เอา icon
+            input.value = display.textContent.replace('⚽ ', '');
+            display.style.display = 'none';
+            input.style.display = 'inline-block';
+            btn.style.display = 'inline-block';
+            input.focus();
+        }
+
+        function saveTeams() {
+            const display = document.getElementById('teamDisplay');
+            const input = document.getElementById('teamInput');
+            const btn = document.getElementById('teamBtn');
+            
+            const newValue = input.value.trim() || 'จันทบุรี vs ศรีสะเกษ';
+            display.textContent = '⚽ ' + newValue;
+            display.style.display = 'inline-block';
+            input.style.display = 'none';
+            btn.style.display = 'none';
+            saveEditableFields();
         }
         function editDate() { 
             const display = document.getElementById('dateDisplay');
@@ -547,50 +975,53 @@
             if(!isNaN(dateObj)) input.value = dateObj.toISOString().split('T')[0];
             toggleField('date'); 
         }
-        function saveDate() { 
-            const val = document.getElementById('dateInput').value;
-            if(val) {
-                 const d = new Date(val);
-                 saveField('date', '📅 ' + d.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}));
-            } else {
-                toggleField('date', false);
-            }
-        }
-        function editTime() { 
-             const display = document.getElementById('timeDisplay');
-             const input = document.getElementById('timeInput');
-             input.value = display.textContent.replace('⏰ Kickoff ', '');
-             toggleField('time'); 
-        }
-        function saveTime() { 
-            const val = document.getElementById('timeInput').value;
-            if(val) saveField('time', '⏰ Kickoff ' + val);
-            else toggleField('time', false);
-        }
 
-        function toggleField(id, showInput = true) {
-            const display = document.getElementById(id + 'Display');
-            const input = document.getElementById(id + 'Input');
-            const btn = document.getElementById(id + 'Btn');
-            if (showInput) {
-                display.style.display = 'none';
-                input.style.display = 'inline-block';
-                btn.style.display = 'inline-block';
-                input.focus();
-            } else {
-                display.style.display = 'inline-block';
-                input.style.display = 'none';
-                btn.style.display = 'none';
+        function saveDate() {
+            const display = document.getElementById('dateDisplay');
+            const input = document.getElementById('dateInput');
+            const btn = document.getElementById('dateBtn');
+            
+            if (input.value) {
+                const date = new Date(input.value);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+                display.textContent = '📅 ' + formattedDate;
             }
-        }
-
-        function saveField(id, newVal) {
-            const display = document.getElementById(id + 'Display');
-            display.textContent = newVal;
-            toggleField(id, false);
+            display.style.display = 'inline-block';
+            input.style.display = 'none';
+            btn.style.display = 'none';
             saveEditableFields();
         }
 
+        function editTime() {
+            const display = document.getElementById('timeDisplay');
+            const input = document.getElementById('timeInput');
+            const btn = document.getElementById('timeBtn');
+            
+            const timeText = display.textContent.replace('⏰ Kickoff ', '');
+            input.value = timeText;
+            
+            display.style.display = 'none';
+            input.style.display = 'inline-block';
+            btn.style.display = 'inline-block';
+            input.focus();
+        }
+
+        function saveTime() {
+            const display = document.getElementById('timeDisplay');
+            const input = document.getElementById('timeInput');
+            const btn = document.getElementById('timeBtn');
+            
+            if (input.value) {
+                display.textContent = '⏰ Kickoff ' + input.value;
+            }
+            display.style.display = 'inline-block';
+            input.style.display = 'none';
+            btn.style.display = 'none';
+            saveEditableFields();
+        }
+
+        /* --- ส่วน Copy และ Reset --- */
         function copyToClipboard() {
             const teams = document.getElementById('teamDisplay').textContent;
             const date = document.getElementById('dateDisplay').textContent;
@@ -626,17 +1057,37 @@
         }
 
         function resetChecklist() {
-            if(confirm('รีเซ็ตทั้งหมด?')) {
-                document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
-                saveChecklistState();
-                updateProgress();
-            }
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            saveChecklistState();
+            updateProgress();
         }
 
-        function addNewItem() {
-            const input = document.getElementById('newItemInput');
-            const val = input.value.trim();
-            if(!val) return;
+        // Edit item functions
+        function openEditModal(index) {
+            currentEditIndex = index;
+            const items = getChecklistItems();
+            const input = document.getElementById('editItemInput');
+            input.value = items[index];
+            input.focus();
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEditIndex = null;
+        }
+
+        function saveEditItem() {
+            if (currentEditIndex === null) return;
+            
+            const newValue = document.getElementById('editItemInput').value.trim();
+            if (!newValue) {
+                alert('กรุณาป้อนข้อความ');
+                return;
+            }
+            
             const items = getChecklistItems();
             items.push(val);
             saveChecklistItems(items);
@@ -645,22 +1096,27 @@
         }
 
         function deleteItem(index) {
-            if(confirm('ลบรายการนี้?')) {
+            if (confirm('คุณแน่ใจหรือว่าต้องการลบรายการนี้?')) {
                 const items = getChecklistItems();
                 items.splice(index, 1);
+                if (items.length === 0) { items = [...defaultItems]; }
                 saveChecklistItems(items);
-                const oldState = JSON.parse(localStorage.getItem('checklistState')) || {};
-                const newState = {};
-                 const keys = Object.keys(oldState).sort((a,b) => parseInt(a.slice(4)) - parseInt(b.slice(4)));
-                 let target = 0;
-                 keys.forEach(k => {
-                     const kIdx = parseInt(k.slice(4));
-                     if(kIdx !== index) {
-                         newState[`item${target}`] = oldState[k];
-                         target++;
-                     }
-                 });
-                localStorage.setItem('checklistState', JSON.stringify(newState));
+                
+                // Update checked state - remove the deleted item and shift others
+                const saved = localStorage.getItem('checklistState');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    const newState = {};
+                    let newIndex = 0;
+                    for (let i = 0; i < Object.keys(state).length; i++) {
+                        if (i !== index) {
+                            newState[`item${newIndex}`] = state[`item${i}`];
+                            newIndex++;
+                        }
+                    }
+                    localStorage.setItem('checklistState', JSON.stringify(newState));
+                }
+                
                 renderChecklist();
             }
         }
