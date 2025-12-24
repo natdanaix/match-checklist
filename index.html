@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
@@ -81,6 +81,7 @@
         .edit-item-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 2000; justify-content: center; align-items: center; }
         .edit-item-modal.show { display: flex; }
         .edit-item-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .edit-item-content h2 { margin-bottom: 15px; color: #333; }
         .edit-item-content input { width: 100%; padding: 12px; border: 2px solid #667eea; border-radius: 6px; margin-bottom: 20px; }
         .edit-item-actions { display: flex; gap: 10px; }
         .edit-item-actions button { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
@@ -97,8 +98,8 @@
             <h1>Thai League</h1>
             <div class="match-info">
                 <div class="editable-field">
-                    <span class="display-field" id="teamDisplay" onclick="editTeams()">จันทบุรี vs ศรีสะเกษ</span>
-                    <input type="text" id="teamInput" style="display: none;" placeholder="เช่น จันทบุรี vs ศรีสะเกษ">
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">Chanthaburi vs Sisaket</span>
+                    <input type="text" id="teamInput" style="display: none;" placeholder="e.g. Chanthaburi vs Sisaket">
                     <button id="teamBtn" style="display: none;" onclick="saveTeams()">Save</button>
                 </div>
                 <div class="editable-field">
@@ -117,7 +118,7 @@
         <div class="checklist">
             <div class="progress-section">
                 <div class="progress-label">
-                    <span>ความคืบหน้า</span>
+                    <span>Status</span>
                     <span id="progressPercent">0%</span>
                 </div>
                 <div class="progress-bar">
@@ -125,17 +126,17 @@
                 </div>
             </div>
 
-            <div class="section-title">📋 รายการเช็คงานก่อนแข่ง</div>
+            <div class="section-title">📋 Check List</div>
             <div style="text-align: right; margin-bottom: 10px;">
                 <button class="item-btn" onclick="uncheckAll()" style="padding: 8px 16px; font-size: 0.9em;">✖️ Uncheck All</button>
             </div>
             
             <div id="checklistContainer">
-                </div>
+            </div>
 
             <div class="add-item-section">
-                <input type="text" id="newItemInput" placeholder="เพิ่มรายการใหม่...">
-                <button onclick="addNewItem()">➕ เพิ่ม</button>
+                <input type="text" id="newItemInput" placeholder="Add new step...">
+                <button onclick="addNewItem()">➕ Add Step</button>
             </div>
         </div>
 
@@ -145,35 +146,35 @@
         </div>
     </div>
 
-    <div class="copy-feedback" id="feedback">✓ คัดลอกแล้ว!</div>
+    <div class="copy-feedback" id="feedback">✓ Copied!</div>
 
     <div class="edit-item-modal" id="editModal">
         <div class="edit-item-content">
-            <h2>แก้ไขรายการ</h2>
-            <input type="text" id="editItemInput" placeholder="แก้ไขข้อความ">
+            <h2>Edit Item</h2>
+            <input type="text" id="editItemInput" placeholder="Edit text">
             <div class="edit-item-actions">
-                <button class="save" onclick="saveEditItem()">💾 บันทึก</button>
-                <button class="cancel" onclick="closeEditModal()">❌ ยกเลิก</button>
+                <button class="save" onclick="saveEditItem()">💾 Save</button>
+                <button class="cancel" onclick="closeEditModal()">❌ Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. รายการหลัก (Default)
+        // รายการหลัก (Default) - แก้เป็นภาษาอังกฤษ
         const defaultItems = [
-            'สัญญาณภาพมาแล้ว',
-            'นัดแพนกล้อง',
-            'แพนกล้องเรียบร้อย',
-            'ตีเส้น',
-            'ทุ่มบอล , sync ball',
-            'เช็ค pgm จาก ob 3จอ',
-            'เทส Vokero',
-            'Export test sound',
-            'เช็คจอ RRA ข้างสนาม',
-            'ผู้ตัดสินตรวจสนาม ',
-            'clear storage',
-            'เตรียมวิดีโอให้ผู้ตัดสิน',
-            'พร้อมแข่ง'
+            'Camera signal to VOR',
+            'Camera Pan with OB at 02:00 PM',
+            'Calibrates line to 16M and Goal line',
+            'Camera Pan finished',
+            'Throw ball and Sync ball',
+            'PGM check from OB 3 screen (OFR case)',
+            'Vokkero test',
+            'Export file to sound test',
+            'RRA check',
+            'Referee field check 04:00 PM',
+            'Clear storage 05:00 PM',
+            'Prepare offside case and ball kick 1,2,3 step for referee check',
+            'Ready to kick-off'
         ];
 
         const STORAGE_KEY_ITEMS = 'checklistItems_v3';
@@ -284,8 +285,7 @@
         }
         function editTeams() { toggleField('team'); }
         function saveTeams() { 
-            // แก้ไขตรงนี้: ไม่เติมอีโมจิ ⚽ แล้ว
-            const val = document.getElementById('teamInput').value.trim() || 'จันทบุรี vs ศรีสะเกษ';
+            const val = document.getElementById('teamInput').value.trim() || 'Chanthaburi vs Sisaket';
             saveField('team', val); 
         }
         function editDate() { 
@@ -348,7 +348,7 @@
             const filledLength = Math.round((checkedCount / totalCount) * 10) || 0;
             const progressBar = '█'.repeat(filledLength) + '░'.repeat(10 - filledLength);
 
-            let text = `⚽🇹🇭 Thai League\n${teams}\n${date}\n${time}\n\n📋 รายการเช็คงานก่อนแข่ง\nความคืบหน้า: [${progressBar}] ${percent}\n\n`;
+            let text = `⚽🇹🇭 Thai League\n${teams}\n${date}\n${time}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
             
             getChecklistItems().forEach((item, index) => {
                 const cb = document.getElementById(`item${index}`);
@@ -371,9 +371,8 @@
             document.getElementById('progressPercent').textContent = pct + '%';
         }
 
-
         function uncheckAll() {
-            if(confirm('เอาเครื่องหมายติ๊กออกทั้งหมด?')) {
+            if(confirm('Uncheck all items?')) {
                 const checkboxes = document.querySelectorAll('input[type="checkbox"]');
                 checkboxes.forEach(cb => cb.checked = false);
                 saveChecklistState();
@@ -381,7 +380,7 @@
             }
         }
         function resetChecklist() {
-            if(confirm('รีเซ็ตการเช็คทั้งหมด? (รายการจะกลับเป็นค่าเริ่มต้น)')) {
+            if(confirm('Reset all checks? (Items will return to default)')) {
                 localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
                 localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({}));
                 initializeData();
@@ -402,7 +401,7 @@
         }
 
         function deleteItem(index) {
-            if(confirm('ลบรายการนี้?')) {
+            if(confirm('Delete this item?')) {
                 let items = getChecklistItems();
                 items.splice(index, 1);
                 if (items.length === 0) { items = [...defaultItems]; }
