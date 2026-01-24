@@ -193,9 +193,18 @@
 
         function initializeData() {
             const storedItems = JSON.parse(localStorage.getItem(STORAGE_KEY_ITEMS));
+            const storedState = localStorage.getItem(STORAGE_KEY_STATE);
+            
+            // ถ้าไม่มี items ให้ใช้ default
             if (!storedItems || storedItems.length === 0) {
                 localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
             }
+            
+            // ถ้าไม่มี state ให้สร้างใหม่เป็น empty object
+            if (!storedState) {
+                localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({}));
+            }
+            
             loadChecklistState();
         }
 
@@ -264,7 +273,10 @@
             });
             localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
         }
-        function loadChecklistState() { JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)); }
+        function loadChecklistState() { 
+            const state = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE));
+            return state || {};
+        }
 
         /* --- ส่วนจัดการข้อมูลทีม วันที่ เวลา --- */
         function saveEditableFields() {
@@ -403,10 +415,21 @@
         function deleteItem(index) {
             if(confirm('Delete this item?')) {
                 let items = getChecklistItems();
+                const state = loadChecklistState();
                 items.splice(index, 1);
                 if (items.length === 0) { items = [...defaultItems]; }
                 saveChecklistItems(items);
-                localStorage.removeItem(STORAGE_KEY_STATE);
+                // Rebuild state with correct indices after deletion
+                const newState = {};
+                Object.keys(state).forEach(key => {
+                    const oldIndex = parseInt(key.replace('item', ''));
+                    if (oldIndex < index) {
+                        newState[`item${oldIndex}`] = state[key];
+                    } else if (oldIndex > index) {
+                        newState[`item${oldIndex - 1}`] = state[key];
+                    }
+                });
+                localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(newState));
                 renderChecklist();
             }
         }
