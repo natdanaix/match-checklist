@@ -143,8 +143,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
         }
-        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
         /* ── Uncheck button row ── */
         .uncheck-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
@@ -201,10 +202,42 @@
             text-align: left;
             transition: color 0.2s;
         }
-        .checklist-item input[type="checkbox"]:checked + label {
-            color: var(--text-muted);
-            text-decoration: line-through;
+        .label-en { display: block; font-size: 0.92em; font-weight: 500; color: var(--text); }
+        .label-th { display: none;  font-size: 0.92em; font-weight: 500; color: var(--text); margin-top: 0; }
+        /* lang=th: hide EN, show TH */
+        body.lang-th .label-en { display: none; }
+        body.lang-th .label-th { display: block; }
+        /* lang=en (default): show EN, hide TH */
+        body.lang-en .label-en { display: block; }
+        body.lang-en .label-th { display: none; }
+        .checklist-item input[type="checkbox"]:checked + label .label-en { text-decoration: line-through; color: var(--text-muted); }
+        .checklist-item input[type="checkbox"]:checked + label .label-th { text-decoration: line-through; color: var(--text-muted); }
+
+        /* Lang toggle button */
+        .lang-toggle {
+            display: flex;
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            gap: 0;
         }
+        .lang-toggle button {
+            padding: 5px 12px;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            cursor: pointer;
+            font-size: 0.78em;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            transition: background 0.15s, color 0.15s;
+        }
+        .lang-toggle button.active {
+            background: var(--accent);
+            color: white;
+        }
+        .lang-toggle button:not(.active):hover { background: var(--surface2); color: var(--text); }
 
         /* Checked item style */
         .checklist-item:has(input:checked) {
@@ -236,20 +269,22 @@
         /* ── Add item section ── */
         .add-item-section {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             margin-top: 14px;
             padding: 14px;
             background: var(--surface2);
             border: 1px solid var(--border);
             border-radius: 10px;
+            align-items: stretch;
         }
+        .add-item-inputs { flex: 1; display: flex; flex-direction: column; gap: 7px; }
         .add-item-section input {
-            flex-grow: 1;
-            padding: 10px 14px;
+            width: 100%;
+            padding: 9px 13px;
             background: var(--surface3);
             border: 1px solid var(--border-bright);
             border-radius: 8px;
-            font-size: 0.9em;
+            font-size: 0.88em;
             color: var(--text);
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -257,7 +292,7 @@
         .add-item-section input::placeholder { color: var(--text-muted); }
         .add-item-section input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .add-item-section button {
-            padding: 10px 18px;
+            padding: 10px 16px;
             background: var(--green);
             color: #0a1a12;
             border: none;
@@ -267,6 +302,7 @@
             font-size: 0.85em;
             white-space: nowrap;
             transition: opacity 0.2s;
+            align-self: stretch;
         }
         .add-item-section button:hover { opacity: 0.85; }
 
@@ -348,14 +384,16 @@
             max-width: 420px;
             box-shadow: 0 24px 64px rgba(0,0,0,0.8);
         }
-        .edit-item-content h2 { margin-bottom: 16px; color: var(--text); font-size: 1em; font-weight: 600; letter-spacing: -0.01em; }
+        .edit-item-content h2 { margin-bottom: 18px; color: var(--text); font-size: 1em; font-weight: 600; letter-spacing: -0.01em; }
+        .edit-field-group { margin-bottom: 14px; }
+        .edit-field-group:last-of-type { margin-bottom: 20px; }
+        .edit-field-label { display: block; font-size: 0.72em; color: var(--text-muted); margin-bottom: 5px; letter-spacing: 0.06em; text-transform: uppercase; }
         .edit-item-content input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 11px 13px;
             background: var(--surface3);
             border: 1px solid var(--border-bright);
             border-radius: 8px;
-            margin-bottom: 18px;
             color: var(--text);
             font-size: 0.9em;
             outline: none;
@@ -375,7 +413,7 @@
             .container { padding: 20px 16px; margin-top: 8px; }
             .checklist-item { padding: 11px 12px; }
             .add-item-section { flex-direction: column; }
-            .add-item-section button { width: 100%; }
+            .add-item-section button { width: 100%; align-self: auto; }
             .actions { flex-direction: column; }
             button.main-action { width: 100%; }
         }
@@ -416,7 +454,12 @@
                 </div>
             </div>
 
-            <div class="section-title">📋 Check List</div>
+            <div class="section-title">📋 Check List
+                <div class="lang-toggle" style="margin-left:auto;">
+                    <button id="langEnBtn" onclick="setLang('en')">🇬🇧 EN</button>
+                    <button id="langThBtn" onclick="setLang('th')">🇹🇭 TH</button>
+                </div>
+            </div>
             <div class="uncheck-row">
                 <button class="item-btn uncheck-all-btn" onclick="uncheckAll()">✖ Uncheck All</button>
             </div>
@@ -425,8 +468,11 @@
             </div>
 
             <div class="add-item-section">
-                <input type="text" id="newItemInput" placeholder="Add new step...">
-                <button onclick="addNewItem()">➕ Add Step</button>
+                <div class="add-item-inputs">
+                    <input type="text" id="newItemEnInput" placeholder="🇬🇧 English step...">
+                    <input type="text" id="newItemThInput" placeholder="🇹🇭 ขั้นตอนภาษาไทย...">
+                </div>
+                <button onclick="addNewItem()">➕ Add</button>
             </div>
         </div>
 
@@ -441,7 +487,14 @@
     <div class="edit-item-modal" id="editModal">
         <div class="edit-item-content">
             <h2>Edit Item</h2>
-            <input type="text" id="editItemInput" placeholder="Edit text">
+            <div class="edit-field-group">
+                <span class="edit-field-label">🇬🇧 English</span>
+                <input type="text" id="editItemEnInput" placeholder="English text">
+            </div>
+            <div class="edit-field-group">
+                <span class="edit-field-label">🇹🇭 ภาษาไทย</span>
+                <input type="text" id="editItemThInput" placeholder="ข้อความภาษาไทย">
+            </div>
             <div class="edit-item-actions">
                 <button class="save" onclick="saveEditItem()">💾 Save</button>
                 <button class="cancel" onclick="closeEditModal()">❌ Cancel</button>
@@ -450,25 +503,25 @@
     </div>
 
     <script>
-        // รายการหลัก (Default) - แก้เป็นภาษาอังกฤษ
+        // รายการหลัก (Default) - 2 ภาษา EN / TH
         const defaultItems = [
-            'Camera signal to VOR',
-            'Camera Pan with OB at 02:00 PM',
-            'Calibrates line to 16M and Goal line',
-            'Camera Pan finished',
-            'Throw ball and Sync ball',
-            'PGM check from OB 3 screen (OFR case)',
-            'Vokkero test',
-            'Export file to sound test',
-            'RRA check',
-            'Referee field check 04:00 PM',
-            'Clear storage 05:00 PM',
-            'Prepare offside case and ball kick 1,2,3 step for referee check',
-            'Ready to kick-off'
+            {en: 'Camera signal to VOR',                                           th: 'สัญญาณภาพมาแล้ว'},
+            {en: 'Camera Pan with OB at 02:00 PM',                                 th: 'นัดแพนกล้อง'},
+            {en: 'Calibrates line to 16M and Goal line',                           th: 'ตีเส้น'},
+            {en: 'Camera Pan finished',                                             th: 'แพนกล้องเรียบร้อย'},
+            {en: 'Throw ball and Sync ball',                                        th: 'ทุ่มบอล, Sync ball'},
+            {en: 'PGM check from OB 3 screen (OFR case)',                          th: 'เช็ค PGM จาก OB 3 จอ'},
+            {en: 'Vokkero test',                                                    th: 'เทส Vokkero'},
+            {en: 'Export file to sound test',                                       th: 'Export test sound'},
+            {en: 'RRA check',                                                       th: 'เช็คจอ RRA ข้างสนาม'},
+            {en: 'Referee field check 04:00 PM',                                   th: 'ผู้ตัดสินตรวจสนาม'},
+            {en: 'Clear storage 05:00 PM',                                          th: 'Clear storage'},
+            {en: 'Prepare offside case and ball kick 1,2,3 step for referee check',th: 'เตรียมวิดีโอให้ผู้ตัดสิน'},
+            {en: 'Ready to kick-off',                                               th: 'พร้อมแข่ง'},
         ];
 
-        const STORAGE_KEY_ITEMS = 'checklistItems_v3';
-        const STORAGE_KEY_STATE = 'checklistState_v3';
+        const STORAGE_KEY_ITEMS = 'checklistItems_v4';
+        const STORAGE_KEY_STATE = 'checklistState_v4';
         const STORAGE_KEY_MATCH = 'matchInfo_v3';
 
         // --- Safe Storage: localStorage + Cookie fallback ---
@@ -476,9 +529,10 @@
 
         function _cookieSet(key, val) {
             try {
-                if (val.length > 3500) return; // cookie limit guard
+                const encoded = encodeURIComponent(val);
+                if (encoded.length > 3800) return; // cookie hard limit ~4096 bytes incl. name+attrs
                 const exp = new Date(Date.now() + 365 * 864e5).toUTCString();
-                document.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(val) + ';expires=' + exp + ';path=/;SameSite=Lax';
+                document.cookie = encodeURIComponent(key) + '=' + encoded + ';expires=' + exp + ';path=/;SameSite=Lax';
             } catch(e) {}
         }
         function _cookieGet(key) {
@@ -515,14 +569,27 @@
         }
         // --- End Storage Layer ---
 
-        let currentEditIndex = null;
+        const STORAGE_KEY_LANG  = 'checklistLang_v1';
+
+        let currentLang = 'en';
         let sortableInstance = null;
 
+        function setLang(lang) {
+            currentLang = lang;
+            storageSet(STORAGE_KEY_LANG, lang);
+            document.body.classList.toggle('lang-th', lang === 'th');
+            document.body.classList.toggle('lang-en', lang === 'en');
+            document.getElementById('langEnBtn').classList.toggle('active', lang === 'en');
+            document.getElementById('langThBtn').classList.toggle('active', lang === 'th');
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = storageGet(STORAGE_KEY_LANG) || 'en';
             initializeData();
             loadEditableFields();
             renderChecklist();
             initSortable();
+            setLang(savedLang);
         });
 
         function initializeData() {
@@ -560,9 +627,10 @@
             const newItems = [];
             const newState = {};
             itemElements.forEach((el, index) => {
-                const text = el.querySelector('label').innerText;
+                const en = el.dataset.en;
+                const th = el.dataset.th;
                 const isChecked = el.querySelector('input[type="checkbox"]').checked;
-                newItems.push(text);
+                newItems.push({en, th});
                 newState[`item${index}`] = isChecked;
             });
             saveChecklistItems(newItems);
@@ -578,10 +646,15 @@
                 const checked = getItemCheckedState(index);
                 const itemElement = document.createElement('div');
                 itemElement.className = 'checklist-item';
+                itemElement.dataset.en = item.en;
+                itemElement.dataset.th = item.th || '';
                 itemElement.innerHTML = `
                     <div class="drag-handle">⋮⋮</div>
                     <input type="checkbox" id="item${index}" ${checked ? 'checked' : ''} onchange="saveChecklistState(); updateProgress();">
-                    <label for="item${index}">${item}</label>
+                    <label for="item${index}">
+                        <span class="label-en">${item.en}</span>
+                        ${item.th ? `<span class="label-th">${item.th}</span>` : ''}
+                    </label>
                     <div class="item-actions">
                         <button class="item-btn" onclick="openEditModal(${index})">✏️</button>
                         <button class="item-btn delete" onclick="deleteItem(${index})">🗑️</button>
@@ -698,7 +771,8 @@
             
             getChecklistItems().forEach((item, index) => {
                 const cb = document.getElementById(`item${index}`);
-                text += `${cb && cb.checked ? '✅' : '⬜'} ${item}\n`;
+                const label = (currentLang === 'th' && item.th) ? item.th : item.en;
+                text += `${cb && cb.checked ? '✅' : '⬜'} ${label}\n`;
             });
 
             navigator.clipboard.writeText(text).then(() => {
@@ -736,13 +810,16 @@
 
         /* --- ส่วนจัดการ Item (เพิ่ม/ลบ/แก้ไข) --- */
         function addNewItem() {
-            const input = document.getElementById('newItemInput');
-            const val = input.value.trim();
-            if(!val) return;
+            const enInput = document.getElementById('newItemEnInput');
+            const thInput = document.getElementById('newItemThInput');
+            const en = enInput.value.trim();
+            const th = thInput.value.trim();
+            if(!en) return;
             const items = getChecklistItems();
-            items.push(val);
+            items.push({en, th});
             saveChecklistItems(items);
-            input.value = '';
+            enInput.value = '';
+            thInput.value = '';
             renderChecklist();
         }
 
@@ -770,17 +847,20 @@
 
         function openEditModal(index) {
             currentEditIndex = index;
-            document.getElementById('editItemInput').value = getChecklistItems()[index];
+            const item = getChecklistItems()[index];
+            document.getElementById('editItemEnInput').value = item.en;
+            document.getElementById('editItemThInput').value = item.th || '';
             document.getElementById('editModal').classList.add('show');
-            document.getElementById('editItemInput').focus();
+            document.getElementById('editItemEnInput').focus();
         }
         function closeEditModal() { document.getElementById('editModal').classList.remove('show'); currentEditIndex = null; }
         function saveEditItem() {
             if(currentEditIndex === null) return;
-            const val = document.getElementById('editItemInput').value.trim();
-            if(val) {
+            const en = document.getElementById('editItemEnInput').value.trim();
+            const th = document.getElementById('editItemThInput').value.trim();
+            if(en) {
                 const items = getChecklistItems();
-                items[currentEditIndex] = val;
+                items[currentEditIndex] = {en, th};
                 saveChecklistItems(items);
                 renderChecklist();
                 closeEditModal();
@@ -789,13 +869,23 @@
 
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                if(document.activeElement.id === 'newItemInput') addNewItem();
-                if(document.activeElement.id === 'editItemInput') saveEditItem();
+                if(document.activeElement.id === 'newItemEnInput') addNewItem();
+                if(document.activeElement.id === 'newItemThInput') addNewItem();
+                if(document.activeElement.id === 'editItemEnInput') saveEditItem();
+                if(document.activeElement.id === 'editItemThInput') saveEditItem();
                 if(document.activeElement.id === 'teamInput') saveTeams();
             }
         });
-        document.getElementById('editModal').addEventListener('click', e => {
-            if(e.target.id === 'editModal') closeEditModal();
+        // ปิด modal เฉพาะเมื่อ mousedown และ mouseup อยู่บน backdrop เท่านั้น
+        // ป้องกันการปิดตอนลาก select text แล้วเม้าออกนอก input
+        let _modalMousedownOnBackdrop = false;
+        const _editModal = document.getElementById('editModal');
+        _editModal.addEventListener('mousedown', e => {
+            _modalMousedownOnBackdrop = (e.target.id === 'editModal');
+        });
+        _editModal.addEventListener('mouseup', e => {
+            if(_modalMousedownOnBackdrop && e.target.id === 'editModal') closeEditModal();
+            _modalMousedownOnBackdrop = false;
         });
     </script>
 </body>
