@@ -124,6 +124,12 @@
         }
         .display-field:hover { background: var(--surface3); color: var(--text); }
 
+        /* Header bilingual spans */
+        .header [data-lang="th"] { display: none; }
+        .header [data-lang="en"] { display: inline; }
+        body.lang-th .header [data-lang="en"] { display: none; }
+        body.lang-th .header [data-lang="th"] { display: inline; }
+
         /* ── Progress ── */
         .checklist { margin-bottom: 28px; }
         .progress-section { margin-bottom: 20px; }
@@ -424,14 +430,20 @@
         <div class="header">
             <div class="trophy">⚽🇹🇭</div>
             <div class="editable-field" style="margin-bottom: 14px;">
-                <span class="display-field" id="titleDisplay" onclick="editTitle()" style="font-size: 1.5em; font-weight: 700; color: var(--text); letter-spacing: -0.02em;">Thai League</span>
-                <input type="text" id="titleInput" style="display: none; font-size: 1.1em; text-align: center; width: 220px;" placeholder="League name">
+                <span class="display-field" id="titleDisplay" onclick="editTitle()" style="font-size: 1.5em; font-weight: 700; color: var(--text); letter-spacing: -0.02em;">
+                    <span data-lang="en">Thai League</span><span data-lang="th">ไทยลีก</span>
+                </span>
+                <input type="text" id="titleEnInput" style="display: none; font-size: 1em; text-align: center; width: 180px;" placeholder="🇬🇧 League name (EN)">
+                <input type="text" id="titleThInput" style="display: none; font-size: 1em; text-align: center; width: 180px;" placeholder="🇹🇭 ชื่อลีก (TH)">
                 <button id="titleBtn" style="display: none;" onclick="saveTitle()">Save</button>
             </div>
             <div class="match-info">
                 <div class="editable-field">
-                    <span class="display-field" id="teamDisplay" onclick="editTeams()">Chanthaburi vs Sisaket</span>
-                    <input type="text" id="teamInput" style="display: none;" placeholder="e.g. Chanthaburi vs Sisaket">
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">
+                        <span data-lang="en">Chanthaburi vs Sisaket</span><span data-lang="th">จันทบุรี vs ศรีสะเกษ</span>
+                    </span>
+                    <input type="text" id="teamEnInput" style="display: none; width: 240px;" placeholder="🇬🇧 e.g. Chanthaburi vs Sisaket">
+                    <input type="text" id="teamThInput" style="display: none; width: 240px;" placeholder="🇹🇭 เช่น จันทบุรี vs ศรีสะเกษ">
                     <button id="teamBtn" style="display: none;" onclick="saveTeams()">Save</button>
                 </div>
                 <div class="editable-field">
@@ -445,8 +457,11 @@
                     <button id="timeBtn" style="display: none;" onclick="saveTime()">Save</button>
                 </div>
                 <div class="editable-field">
-                    <span class="display-field" id="venueDisplay" onclick="editVenue()">🏟️ สนาม: -</span>
-                    <input type="text" id="venueInput" style="display: none;" placeholder="e.g. PAT Stadium">
+                    <span class="display-field" id="venueDisplay" onclick="editVenue()">
+                        <span data-lang="en">🏟️ Venue: -</span><span data-lang="th">🏟️ สนาม: -</span>
+                    </span>
+                    <input type="text" id="venueEnInput" style="display: none; width: 220px;" placeholder="🇬🇧 e.g. PAT Stadium">
+                    <input type="text" id="venueThInput" style="display: none; width: 220px;" placeholder="🇹🇭 เช่น สนาม PAT">
                     <button id="venueBtn" style="display: none;" onclick="saveVenue()">Save</button>
                 </div>
             </div>
@@ -531,7 +546,7 @@
 
         const STORAGE_KEY_ITEMS = 'checklistItems_v4';
         const STORAGE_KEY_STATE = 'checklistState_v4';
-        const STORAGE_KEY_MATCH = 'matchInfo_v3';
+        const STORAGE_KEY_MATCH = 'matchInfo_v4';
 
         // --- Safe Storage: localStorage + Cookie fallback ---
         const _mem = {};
@@ -697,41 +712,88 @@
         /* --- ส่วนจัดการข้อมูลทีม วันที่ เวลา --- */
         function saveEditableFields() {
             const data = {
-                title: document.getElementById('titleDisplay').textContent,
-                teams: document.getElementById('teamDisplay').textContent,
+                titleEn: document.querySelector('#titleDisplay [data-lang="en"]').textContent,
+                titleTh: document.querySelector('#titleDisplay [data-lang="th"]').textContent,
+                teamsEn: document.querySelector('#teamDisplay [data-lang="en"]').textContent,
+                teamsTh: document.querySelector('#teamDisplay [data-lang="th"]').textContent,
                 date: document.getElementById('dateDisplay').textContent,
                 time: document.getElementById('timeDisplay').textContent,
-                venue: document.getElementById('venueDisplay').textContent
+                venueEn: document.querySelector('#venueDisplay [data-lang="en"]').textContent,
+                venueTh: document.querySelector('#venueDisplay [data-lang="th"]').textContent,
             };
             storageSet(STORAGE_KEY_MATCH, JSON.stringify(data));
         }
         function loadEditableFields() {
             const data = JSON.parse(storageGet(STORAGE_KEY_MATCH));
             if (data) {
-                if (data.title) document.getElementById('titleDisplay').textContent = data.title;
-                document.getElementById('teamDisplay').textContent = data.teams;
-                document.getElementById('dateDisplay').textContent = data.date;
-                document.getElementById('timeDisplay').textContent = data.time;
-                if (data.venue) document.getElementById('venueDisplay').textContent = data.venue;
+                if (data.titleEn) document.querySelector('#titleDisplay [data-lang="en"]').textContent = data.titleEn;
+                if (data.titleTh) document.querySelector('#titleDisplay [data-lang="th"]').textContent = data.titleTh;
+                if (data.teamsEn) document.querySelector('#teamDisplay [data-lang="en"]').textContent = data.teamsEn;
+                if (data.teamsTh) document.querySelector('#teamDisplay [data-lang="th"]').textContent = data.teamsTh;
+                if (data.date) document.getElementById('dateDisplay').textContent = data.date;
+                if (data.time) document.getElementById('timeDisplay').textContent = data.time;
+                if (data.venueEn) document.querySelector('#venueDisplay [data-lang="en"]').textContent = data.venueEn;
+                if (data.venueTh) document.querySelector('#venueDisplay [data-lang="th"]').textContent = data.venueTh;
+            }
+        }
+        function toggleBilingualField(id, showInput = true) {
+            const display = document.getElementById(id + 'Display');
+            const enInput = document.getElementById(id + 'EnInput');
+            const thInput = document.getElementById(id + 'ThInput');
+            const btn = document.getElementById(id + 'Btn');
+            if (showInput) {
+                display.style.display = 'none';
+                enInput.style.display = 'inline-block';
+                thInput.style.display = 'inline-block';
+                btn.style.display = 'inline-block';
+                enInput.focus();
+            } else {
+                display.style.display = '';
+                enInput.style.display = 'none';
+                thInput.style.display = 'none';
+                btn.style.display = 'none';
             }
         }
         function editTitle() {
-            document.getElementById('titleInput').value = document.getElementById('titleDisplay').textContent;
-            toggleField('title');
+            document.getElementById('titleEnInput').value = document.querySelector('#titleDisplay [data-lang="en"]').textContent;
+            document.getElementById('titleThInput').value = document.querySelector('#titleDisplay [data-lang="th"]').textContent;
+            toggleBilingualField('title');
         }
         function saveTitle() {
-            const val = document.getElementById('titleInput').value.trim() || 'Thai League';
-            saveField('title', val);
+            const en = document.getElementById('titleEnInput').value.trim() || 'Thai League';
+            const th = document.getElementById('titleThInput').value.trim() || 'ไทยลีก';
+            document.querySelector('#titleDisplay [data-lang="en"]').textContent = en;
+            document.querySelector('#titleDisplay [data-lang="th"]').textContent = th;
+            toggleBilingualField('title', false);
+            saveEditableFields();
         }
-        function editVenue() { toggleField('venue'); }
+        function editVenue() {
+            const enFull = document.querySelector('#venueDisplay [data-lang="en"]').textContent.replace('🏟️ Venue: ', '');
+            const thFull = document.querySelector('#venueDisplay [data-lang="th"]').textContent.replace('🏟️ สนาม: ', '');
+            document.getElementById('venueEnInput').value = enFull === '-' ? '' : enFull;
+            document.getElementById('venueThInput').value = thFull === '-' ? '' : thFull;
+            toggleBilingualField('venue');
+        }
         function saveVenue() {
-            const val = document.getElementById('venueInput').value.trim() || '-';
-            saveField('venue', '🏟️ สนาม: ' + val);
+            const en = document.getElementById('venueEnInput').value.trim() || '-';
+            const th = document.getElementById('venueThInput').value.trim() || en;
+            document.querySelector('#venueDisplay [data-lang="en"]').textContent = '🏟️ Venue: ' + en;
+            document.querySelector('#venueDisplay [data-lang="th"]').textContent = '🏟️ สนาม: ' + th;
+            toggleBilingualField('venue', false);
+            saveEditableFields();
         }
-        function editTeams() { toggleField('team'); }
-        function saveTeams() { 
-            const val = document.getElementById('teamInput').value.trim() || 'Chanthaburi vs Sisaket';
-            saveField('team', val); 
+        function editTeams() {
+            document.getElementById('teamEnInput').value = document.querySelector('#teamDisplay [data-lang="en"]').textContent;
+            document.getElementById('teamThInput').value = document.querySelector('#teamDisplay [data-lang="th"]').textContent;
+            toggleBilingualField('team');
+        }
+        function saveTeams() {
+            const en = document.getElementById('teamEnInput').value.trim() || 'Chanthaburi vs Sisaket';
+            const th = document.getElementById('teamThInput').value.trim() || en;
+            document.querySelector('#teamDisplay [data-lang="en"]').textContent = en;
+            document.querySelector('#teamDisplay [data-lang="th"]').textContent = th;
+            toggleBilingualField('team', false);
+            saveEditableFields();
         }
         function editDate() { 
             const display = document.getElementById('dateDisplay');
@@ -783,11 +845,12 @@
 
         /* --- ส่วน Copy และ Reset --- */
         function copyToClipboard() {
-            const title = document.getElementById('titleDisplay').textContent;
-            const teams = document.getElementById('teamDisplay').textContent;
+            const lang = currentLang;
+            const title = document.querySelector(`#titleDisplay [data-lang="${lang}"]`)?.textContent || document.querySelector('#titleDisplay [data-lang="en"]').textContent;
+            const teams = document.querySelector(`#teamDisplay [data-lang="${lang}"]`)?.textContent || document.querySelector('#teamDisplay [data-lang="en"]').textContent;
+            const venue = document.querySelector(`#venueDisplay [data-lang="${lang}"]`)?.textContent || document.querySelector('#venueDisplay [data-lang="en"]').textContent;
             const date = document.getElementById('dateDisplay').textContent;
             const time = document.getElementById('timeDisplay').textContent;
-            const venue = document.getElementById('venueDisplay').textContent;
             const percent = document.getElementById('progressPercent').textContent;
             
             const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
@@ -901,9 +964,12 @@
                 if(document.activeElement.id === 'newItemThInput') addNewItem();
                 if(document.activeElement.id === 'editItemEnInput') saveEditItem();
                 if(document.activeElement.id === 'editItemThInput') saveEditItem();
-                if(document.activeElement.id === 'teamInput') saveTeams();
-                if(document.activeElement.id === 'venueInput') saveVenue();
-                if(document.activeElement.id === 'titleInput') saveTitle();
+                if(document.activeElement.id === 'teamEnInput') saveTeams();
+                if(document.activeElement.id === 'teamThInput') saveTeams();
+                if(document.activeElement.id === 'venueEnInput') saveVenue();
+                if(document.activeElement.id === 'venueThInput') saveVenue();
+                if(document.activeElement.id === 'titleEnInput') saveTitle();
+                if(document.activeElement.id === 'titleThInput') saveTitle();
             }
         });
         // ปิด modal เฉพาะเมื่อ mousedown และ mouseup อยู่บน backdrop เท่านั้น
