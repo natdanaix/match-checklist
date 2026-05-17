@@ -423,7 +423,11 @@
     <div class="container">
         <div class="header">
             <div class="trophy">⚽🇹🇭</div>
-            <h1>Thai League</h1>
+            <div class="editable-field" style="margin-bottom: 14px;">
+                <span class="display-field" id="titleDisplay" onclick="editTitle()" style="font-size: 1.5em; font-weight: 700; color: var(--text); letter-spacing: -0.02em;">Thai League</span>
+                <input type="text" id="titleInput" style="display: none; font-size: 1.1em; text-align: center; width: 220px;" placeholder="League name">
+                <button id="titleBtn" style="display: none;" onclick="saveTitle()">Save</button>
+            </div>
             <div class="match-info">
                 <div class="editable-field">
                     <span class="display-field" id="teamDisplay" onclick="editTeams()">Chanthaburi vs Sisaket</span>
@@ -439,6 +443,11 @@
                     <span class="display-field" id="timeDisplay" onclick="editTime()">⏰ Kickoff 18:30</span>
                     <input type="time" id="timeInput" style="display: none;">
                     <button id="timeBtn" style="display: none;" onclick="saveTime()">Save</button>
+                </div>
+                <div class="editable-field">
+                    <span class="display-field" id="venueDisplay" onclick="editVenue()">🏟️ สนาม: -</span>
+                    <input type="text" id="venueInput" style="display: none;" placeholder="e.g. PAT Stadium">
+                    <button id="venueBtn" style="display: none;" onclick="saveVenue()">Save</button>
                 </div>
             </div>
         </div>
@@ -688,19 +697,36 @@
         /* --- ส่วนจัดการข้อมูลทีม วันที่ เวลา --- */
         function saveEditableFields() {
             const data = {
+                title: document.getElementById('titleDisplay').textContent,
                 teams: document.getElementById('teamDisplay').textContent,
                 date: document.getElementById('dateDisplay').textContent,
-                time: document.getElementById('timeDisplay').textContent
+                time: document.getElementById('timeDisplay').textContent,
+                venue: document.getElementById('venueDisplay').textContent
             };
             storageSet(STORAGE_KEY_MATCH, JSON.stringify(data));
         }
         function loadEditableFields() {
             const data = JSON.parse(storageGet(STORAGE_KEY_MATCH));
             if (data) {
+                if (data.title) document.getElementById('titleDisplay').textContent = data.title;
                 document.getElementById('teamDisplay').textContent = data.teams;
                 document.getElementById('dateDisplay').textContent = data.date;
                 document.getElementById('timeDisplay').textContent = data.time;
+                if (data.venue) document.getElementById('venueDisplay').textContent = data.venue;
             }
+        }
+        function editTitle() {
+            document.getElementById('titleInput').value = document.getElementById('titleDisplay').textContent;
+            toggleField('title');
+        }
+        function saveTitle() {
+            const val = document.getElementById('titleInput').value.trim() || 'Thai League';
+            saveField('title', val);
+        }
+        function editVenue() { toggleField('venue'); }
+        function saveVenue() {
+            const val = document.getElementById('venueInput').value.trim() || '-';
+            saveField('venue', '🏟️ สนาม: ' + val);
         }
         function editTeams() { toggleField('team'); }
         function saveTeams() { 
@@ -757,9 +783,11 @@
 
         /* --- ส่วน Copy และ Reset --- */
         function copyToClipboard() {
+            const title = document.getElementById('titleDisplay').textContent;
             const teams = document.getElementById('teamDisplay').textContent;
             const date = document.getElementById('dateDisplay').textContent;
             const time = document.getElementById('timeDisplay').textContent;
+            const venue = document.getElementById('venueDisplay').textContent;
             const percent = document.getElementById('progressPercent').textContent;
             
             const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
@@ -767,7 +795,7 @@
             const filledLength = Math.round((checkedCount / totalCount) * 10) || 0;
             const progressBar = '█'.repeat(filledLength) + '░'.repeat(10 - filledLength);
 
-            let text = `⚽🇹🇭 Thai League\n${teams}\n${date}\n${time}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
+            let text = `⚽🇹🇭 ${title}\n${teams}\n${date}\n${time}\n${venue}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
             
             getChecklistItems().forEach((item, index) => {
                 const cb = document.getElementById(`item${index}`);
@@ -874,6 +902,8 @@
                 if(document.activeElement.id === 'editItemEnInput') saveEditItem();
                 if(document.activeElement.id === 'editItemThInput') saveEditItem();
                 if(document.activeElement.id === 'teamInput') saveTeams();
+                if(document.activeElement.id === 'venueInput') saveVenue();
+                if(document.activeElement.id === 'titleInput') saveTitle();
             }
         });
         // ปิด modal เฉพาะเมื่อ mousedown และ mouseup อยู่บน backdrop เท่านั้น
